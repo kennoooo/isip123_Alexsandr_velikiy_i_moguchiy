@@ -2,193 +2,133 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DailyExpenses
+namespace StoreApp
 {
-    public class Expense
+    enum Category { Electronics, Food, Clothes }
+
+    class Product
     {
-        public string Name { get; set; }
-        public double Amount { get; set; }
+        private static int nextCode = 1000;
+        public int Code { get; }
+        public string Name { get; }
+        public decimal Price { get; private set; }
+        public int Quantity { get; private set; }
+        public bool InStock => Quantity > 0;
+        public Category Category { get; }
 
-        public Expense(string name, double amount)
+        public Product(string name, decimal price, int qty, Category cat)
         {
+            if (string.IsNullOrWhiteSpace(name) || price <= 0 || qty < 0)
+                throw new ArgumentException("Некорректные данные для товара");
+
+            Code = ++nextCode;
             Name = name;
-            Amount = amount;
+            Price = price;
+            Quantity = qty;
+            Category = cat;
         }
 
-        public override string ToString()
+        public void AddStock(int qty) => Quantity += qty;
+        public bool Sell(int qty)
         {
-            return $"{Name}; {Amount} рубле";
+            if (qty <= 0 || qty > Quantity) return false;
+            Quantity -= qty; return true;
         }
+
+
     }
 
     class Program
     {
-        static void Main(string[] args)
+        static List<Product> products = new List<Product>
         {
-            List<Expense> expenses = new List<Expense>();
-            Console.WriteLine("Введите количество операций (от 2 до 40):");
-            int n;
-            while (!int.TryParse(Console.ReadLine(), out n) || n < 2 || n > 40)
-            {
-                Console.WriteLine("Неверное значение. Введите число от 2 до 40:");
-            }
 
-            Console.WriteLine("Введите траты по шаблону: (Название; Сумма)");
-            for (int i = 0; i < n; i++)
-            {
-                string line;
-                while (true)
-                {
-                    line = Console.ReadLine().Trim();
+        };
 
-                    {
-
-                        string[] parts = line.Split(';');
-                        if (parts.Length == 2)
-                        {
-                            string name = parts[0].Trim();
-                            if (double.TryParse(parts[1].Trim(), out double amount) && amount > 0)
-                            {
-                                expenses.Add(new Expense(name, amount));
-                                break;
-                            }
-                        }
-                    }
-                    Console.WriteLine("Неверный формат. Введите по шаблону: (Название; Сумма)");
-                }
-            }
-
+        static void Main()
+        {
             while (true)
             {
-                Console.WriteLine("\nМеню:");
-                Console.WriteLine("1. Вывод данных");
-                Console.WriteLine("2. Статистика (среднее, максимальное, минимальное, сумма)");
-                Console.WriteLine("3. Сортировка по цене (пузырьковая сортировка)");
-                Console.WriteLine("4. Конвертация валюты");
-                Console.WriteLine("5. Поиск по названию");
-                Console.WriteLine("0. Выход");
-                Console.Write("Выберите пункт: ");
-                string choice = Console.ReadLine();
-
-                switch (choice)
+                Console.WriteLine("\n1. Добавить  \n2. Удалить  \n3. Поставка  \n4. Продажа  \n5. Поиск  \n6. Выход");
+                switch (Console.ReadLine())
                 {
-                    case "1":
-                        Console.WriteLine("\nДанные:");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "2":
-                        if (expenses.Count > 0)
-                        {
-                            double sum = expenses.Sum(e => e.Amount);
-                            double avg = sum / expenses.Count;
-                            double max = expenses.Max(e => e.Amount);
-                            double min = expenses.Min(e => e.Amount);
-                            Console.WriteLine($"\nСтатистика:");
-                            Console.WriteLine($"Сумма: {sum} рубле");
-                            Console.WriteLine($"Среднее: {avg:F2} рубле");
-                            Console.WriteLine($"Максимум: {max} рубле");
-                            Console.WriteLine($"Минимум: {min} рубле");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Нет данных.");
-                        }
-                        break;
-                    case "3":
-                        BubbleSort(expenses);
-                        Console.WriteLine("\nДанные отсортированы по цене (по возрастанию):");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
+                    case "1": AddProduct(); break;
+                    case "2": Modify(p => products.Remove(p), "удалён"); break;
+                    case "3": Modify(p => { p.AddStock(InputInt("Сколько добавить? ")); }, "пополнен"); break;
                     case "4":
-                        Console.WriteLine("\nВыберите валюту для конвертации:");
-                        Console.WriteLine("1. доллар (курс: 90 рубле за 1 доллар)");
-                        Console.WriteLine("2. евро (курс: 100 рубле за 1 евро)");
-                        Console.WriteLine("3. Ввести свой курс");
-                        Console.Write("Выбор: ");
-                        string currChoice = Console.ReadLine();
-                        double rate = 1.0;
-                        string newCurrency = "";
-                        switch (currChoice)
-                        {
-                            case "1":
-                                rate = 90.0;
-                                newCurrency = "доллар";
-                                break;
-                            case "2":
-                                rate = 100.0;
-                                newCurrency = "евро";
-                                break;
-                            case "3":
-                                Console.Write("Введите курс: ");
-                                if (double.TryParse(Console.ReadLine(), out rate) && rate > 0)
-                                {
-                                    Console.Write("Введите название валюты: ");
-                                    newCurrency = Console.ReadLine().Trim();
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Неверный курс.");
-                                    continue;
-                                }
-                                break;
-                            default:
-                                Console.WriteLine("Неверный выбор.");
-                                continue;
-                        }
-                        Console.WriteLine($"\nКонвертированные данные в {newCurrency}:");
-                        foreach (var exp in expenses)
-                        {
-                            double converted = exp.Amount / rate;
-                            Console.WriteLine($"{exp.Name}; {converted:F2} {newCurrency}");
-                        }
-                        break;
-                    case "5":
-                        Console.Write("Введите название для поиска: ");
-                        string keyword = Console.ReadLine().Trim();
-                        var found = expenses.Where(e => e.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
-                        if (found.Count > 0)
-                        {
-                            Console.WriteLine("\nНайденные траты:");
-                            foreach (var exp in found)
-                            {
-                                Console.WriteLine(exp);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Ничего не найдено.");
-                        }
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("Неверный выбор.");
-                        break;
+                        Modify(p => {
+                            int qty = InputInt("Сколько продать? ");
+                            Console.WriteLine(p.Sell(qty) ? "Продано." : "Недостаточно товара.");
+                        }); break;
+                    case "5": Search(); break;
+                    case "6": return;
+                    default: Console.WriteLine("Неверная команда."); break;
                 }
             }
         }
 
-        static void BubbleSort(List<Expense> list)
+        static void AddProduct()
         {
-            int n = list.Count;
-            for (int i = 0; i < n - 1; i++)
+            try
             {
-                for (int j = 0; j < n - i - 1; j++)
-                {
-                    if (list[j].Amount > list[j + 1].Amount)
-                    {
-                        Expense temp = list[j];
-                        list[j] = list[j + 1];
-                        list[j + 1] = temp;
-                    }
-                }
+                string name = Input("Название: ");
+                decimal price = InputDecimal("Цена: ");
+                int qty = InputInt("Количество: ");
+                Console.WriteLine("Категория (0 - Electronics, 1 - Food, 2 - Clothes): ");
+                Category cat = (Category)InputInt("Ваш выбор: ", 0, 2);
+                products.Add(new Product(name, price, qty, cat));
+                Console.WriteLine("Товар добавлен.");
             }
+            catch (Exception e) { Console.WriteLine("Ошибка: " + e.Message); }
+        }
+
+        static void Modify(Action<Product> action, string successMsg = "")
+        {
+            var p = FindByCode();
+            if (p == null) return;
+            action(p);
+            if (!string.IsNullOrEmpty(successMsg)) Console.WriteLine($"Товар {successMsg}.");
+        }
+
+        static void Search()
+        {
+            Console.WriteLine("1.Код  2.Название  3.Категория");
+            switch (Console.ReadLine())
+            {
+                case "1": Show(FindByCode()); break;
+                case "2":
+                    string name = Input("Название: ");
+                    Show(products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)));
+                    break;
+                case "3":
+                    int cat = InputInt("Категория (0-2): ", 0, 2);
+                    Show(products.Where(p => p.Category == (Category)cat));
+                    break;
+                default: Console.WriteLine("Ошибка ввода."); break;
+            }
+        }
+
+        static Product FindByCode()
+        {
+            int code = InputInt("Введите код товара: ");
+            var p = products.FirstOrDefault(x => x.Code == code);
+            if (p == null) Console.WriteLine("Товар не найден.");
+            return p;
+        }
+
+        static void Show(Product p) { if (p != null) Console.WriteLine(p); }
+        static void Show(IEnumerable<Product> list) { foreach (var p in list) Console.WriteLine(p); }
+
+        static string Input(string msg) { Console.Write(msg); return Console.ReadLine(); }
+        static int InputInt(string msg, int min = int.MinValue, int max = int.MaxValue)
+        {
+            Console.Write(msg);
+            return int.TryParse(Console.ReadLine(), out int v) && v >= min && v <= max ? v : throw new Exception("Некорректное число");
+        }
+        static decimal InputDecimal(string msg)
+        {
+            Console.Write(msg);
+            return decimal.TryParse(Console.ReadLine(), out decimal v) && v > 0 ? v : throw new Exception("Некорректная цена");
         }
     }
 }

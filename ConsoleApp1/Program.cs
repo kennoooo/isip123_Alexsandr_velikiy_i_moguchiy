@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace StoreApp
 {
@@ -19,7 +20,7 @@ namespace StoreApp
         public Product(string name, decimal price, int qty, Category cat)
         {
             if (string.IsNullOrWhiteSpace(name) || price <= 0 || qty < 0)
-                throw new ArgumentException("Некорректные данные для товара");
+                throw new ArgumentException("Invalid product data");
 
             Code = ++nextCode;
             Name = name;
@@ -34,35 +35,38 @@ namespace StoreApp
             if (qty <= 0 || qty > Quantity) return false;
             Quantity -= qty; return true;
         }
-
-
     }
 
     class Program
     {
-        static List<Product> products = new List<Product>
-        {
-
-        };
+        static List<Product> products = new List<Product>();
 
         static void Main()
         {
+
             while (true)
             {
-                Console.WriteLine("\n1. Добавить  \n2. Удалить  \n3. Поставка  \n4. Продажа  \n5. Поиск  \n6. Выход");
+                Console.WriteLine("\n1. Add product\n2. Delete product\n3. Restock\n4. Sell product\n5. Search products\n6. Exit");
+                Console.Write("Choose action: ");
+                
                 switch (Console.ReadLine())
                 {
                     case "1": AddProduct(); break;
-                    case "2": Modify(p => products.Remove(p), "удалён"); break;
-                    case "3": Modify(p => { p.AddStock(InputInt("Сколько добавить? ")); }, "пополнен"); break;
+                    case "2": Modify(p => products.Remove(p), "deleted"); break;
+                    case "3": Modify(p => { 
+                            int qty = InputInt("How much to add? "); 
+                            p.AddStock(qty); 
+                        }, "restocked"); 
+                        break;
                     case "4":
                         Modify(p => {
-                            int qty = InputInt("Сколько продать? ");
-                            Console.WriteLine(p.Sell(qty) ? "Продано." : "Недостаточно товара.");
-                        }); break;
+                            int qty = InputInt("How much to sell? ");
+                            Console.WriteLine(p.Sell(qty) ? "Sold." : "Not enough stock.");
+                        }); 
+                        break;
                     case "5": Search(); break;
                     case "6": return;
-                    default: Console.WriteLine("Неверная команда."); break;
+                    default: Console.WriteLine("Invalid command."); break;
                 }
             }
         }
@@ -71,15 +75,15 @@ namespace StoreApp
         {
             try
             {
-                string name = Input("Название: ");
-                decimal price = InputDecimal("Цена: ");
-                int qty = InputInt("Количество: ");
-                Console.WriteLine("Категория (0 - Electronics, 1 - Food, 2 - Clothes): ");
-                Category cat = (Category)InputInt("Ваш выбор: ", 0, 2);
+                string name = Input("Name: ");
+                decimal price = InputDecimal("Price: ");
+                int qty = InputInt("Quantity: ");
+                Console.WriteLine("Category (0 - Electronics, 1 - Food, 2 - Clothes): ");
+                Category cat = (Category)InputInt("Your choice: ", 0, 2);
                 products.Add(new Product(name, price, qty, cat));
-                Console.WriteLine("Товар добавлен.");
+                Console.WriteLine("Product added.");
             }
-            catch (Exception e) { Console.WriteLine("Ошибка: " + e.Message); }
+            catch (Exception e) { Console.WriteLine("Error: " + e.Message); }
         }
 
         static void Modify(Action<Product> action, string successMsg = "")
@@ -87,48 +91,108 @@ namespace StoreApp
             var p = FindByCode();
             if (p == null) return;
             action(p);
-            if (!string.IsNullOrEmpty(successMsg)) Console.WriteLine($"Товар {successMsg}.");
+            if (!string.IsNullOrEmpty(successMsg)) Console.WriteLine($"Product {successMsg}.");
         }
 
         static void Search()
         {
-            Console.WriteLine("1.Код  2.Название  3.Категория");
+            Console.WriteLine("1. By code\n2. By name\n3. By category");
+            Console.Write("Choose search type: ");
+            
             switch (Console.ReadLine())
             {
-                case "1": Show(FindByCode()); break;
+                case "1": 
+                    var product = FindByCode();
+                    if (product != null)
+                    {
+                        Console.WriteLine("\nFound product:");
+                        Show(product);
+                    }
+                    break;
                 case "2":
-                    string name = Input("Название: ");
-                    Show(products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)));
+                    string name = Input("Enter name to search: ");
+                    var foundByName = products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
+                    if (foundByName.Any())
+                    {
+                        Console.WriteLine($"\nFound products: {foundByName.Count}");
+                        Show(foundByName);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Products not found.");
+                    }
                     break;
                 case "3":
-                    int cat = InputInt("Категория (0-2): ", 0, 2);
-                    Show(products.Where(p => p.Category == (Category)cat));
+                    int cat = InputInt("Category (0-Electronics, 1-Food, 2-Clothes): ", 0, 2);
+                    var foundByCategory = products.Where(p => p.Category == (Category)cat).ToList();
+                    if (foundByCategory.Any())
+                    {
+                        Console.WriteLine($"\nFound products in category {(Category)cat}: {foundByCategory.Count}");
+                        Show(foundByCategory);
+                    }
+                    else
+                    {
+                        Console.WriteLine("No products found in this category.");
+                    }
                     break;
-                default: Console.WriteLine("Ошибка ввода."); break;
+                default: Console.WriteLine("Input error."); break;
             }
         }
 
         static Product FindByCode()
         {
-            int code = InputInt("Введите код товара: ");
-            var p = products.FirstOrDefault(x => x.Code == code);
-            if (p == null) Console.WriteLine("Товар не найден.");
-            return p;
+            try
+            {
+                int code = InputInt("Enter product code: ");
+                var p = products.FirstOrDefault(x => x.Code == code);
+                if (p == null) Console.WriteLine("Product not found.");
+                return p;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Code input error.");
+                return null;
+            }
         }
 
-        static void Show(Product p) { if (p != null) Console.WriteLine(p); }
-        static void Show(IEnumerable<Product> list) { foreach (var p in list) Console.WriteLine(p); }
+        static void Show(Product p) 
+        { 
+            if (p != null) 
+                Console.WriteLine(p); 
+        }
+        
+        static void Show(IEnumerable<Product> list) 
+        { 
+            foreach (var p in list) 
+                Console.WriteLine(p); 
+        }
 
-        static string Input(string msg) { Console.Write(msg); return Console.ReadLine(); }
+        static string Input(string msg) 
+        { 
+            Console.Write(msg); 
+            return Console.ReadLine(); 
+        }
+        
         static int InputInt(string msg, int min = int.MinValue, int max = int.MaxValue)
         {
-            Console.Write(msg);
-            return int.TryParse(Console.ReadLine(), out int v) && v >= min && v <= max ? v : throw new Exception("Некорректное число");
+            while (true)
+            {
+                Console.Write(msg);
+                if (int.TryParse(Console.ReadLine(), out int v) && v >= min && v <= max)
+                    return v;
+                Console.WriteLine($"Error! Enter a number from {min} to {max}");
+            }
         }
+        
         static decimal InputDecimal(string msg)
         {
-            Console.Write(msg);
-            return decimal.TryParse(Console.ReadLine(), out decimal v) && v > 0 ? v : throw new Exception("Некорректная цена");
+            while (true)
+            {
+                Console.Write(msg);
+                if (decimal.TryParse(Console.ReadLine(), out decimal v) && v > 0)
+                    return v;
+                Console.WriteLine("Error! Enter a valid price (positive number)");
+            }
         }
     }
 }

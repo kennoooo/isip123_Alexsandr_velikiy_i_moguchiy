@@ -35,6 +35,11 @@ namespace StoreApp
             if (qty <= 0 || qty > Quantity) return false;
             Quantity -= qty; return true;
         }
+
+        public override string ToString()
+        {
+            return $"Code: {Code}, Name: {Name}, Price: {Price:C}, Quantity: {Quantity}, Category: {Category}, In Stock: {InStock}";
+        }
     }
 
     class Program
@@ -44,25 +49,27 @@ namespace StoreApp
         static void Main()
         {
 
+
             while (true)
             {
-                Console.WriteLine("\n1. Add product\n2. Delete product\n3. Restock\n4. Sell product\n5. Search products\n6. Exit");
+                Console.WriteLine("1. Add product\n2. Delete product\n3. Restock\n4. Sell product\n5. Search products\n6. Exit");
                 Console.Write("Choose action: ");
-                
+
                 switch (Console.ReadLine())
                 {
                     case "1": AddProduct(); break;
                     case "2": Modify(p => products.Remove(p), "deleted"); break;
-                    case "3": Modify(p => { 
-                            int qty = InputInt("How much to add? "); 
-                            p.AddStock(qty); 
-                        }, "restocked"); 
+                    case "3":
+                        Modify(p => {
+                            int qty = InputInt("How much to add? ");
+                            p.AddStock(qty);
+                        }, "restocked");
                         break;
                     case "4":
                         Modify(p => {
                             int qty = InputInt("How much to sell? ");
                             Console.WriteLine(p.Sell(qty) ? "Sold." : "Not enough stock.");
-                        }); 
+                        });
                         break;
                     case "5": Search(); break;
                     case "6": return;
@@ -98,10 +105,10 @@ namespace StoreApp
         {
             Console.WriteLine("1. By code\n2. By name\n3. By category");
             Console.Write("Choose search type: ");
-            
+
             switch (Console.ReadLine())
             {
-                case "1": 
+                case "1":
                     var product = FindByCode();
                     if (product != null)
                     {
@@ -155,24 +162,24 @@ namespace StoreApp
             }
         }
 
-        static void Show(Product p) 
-        { 
-            if (p != null) 
-                Console.WriteLine(p); 
+        static void Show(Product p)
+        {
+            if (p != null)
+                Console.WriteLine(p);
         }
-        
-        static void Show(IEnumerable<Product> list) 
-        { 
-            foreach (var p in list) 
+
+        static void Show(IEnumerable<Product> list)
+        {
+            foreach (var p in list)
                 Console.WriteLine(p); 
         }
 
-        static string Input(string msg) 
-        { 
-            Console.Write(msg); 
-            return Console.ReadLine(); 
+        static string Input(string msg)
+        {
+            Console.Write(msg);
+            return Console.ReadLine();
         }
-        
+
         static int InputInt(string msg, int min = int.MinValue, int max = int.MaxValue)
         {
             while (true)
@@ -183,7 +190,7 @@ namespace StoreApp
                 Console.WriteLine($"Error! Enter a number from {min} to {max}");
             }
         }
-        
+
         static decimal InputDecimal(string msg)
         {
             while (true)

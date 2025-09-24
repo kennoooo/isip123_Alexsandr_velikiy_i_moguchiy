@@ -82,7 +82,7 @@ namespace DailyExpenses
                 Console.WriteLine("4 - Конвертация валюты");
                 Console.WriteLine("5 - Поиск по названию");
                 Console.WriteLine("0 - Выход");
-                Console.Write("Выберите: ");
+                Console.WriteLine("Выберите: ");
 
                 switch (Console.ReadLine())
                 {
@@ -136,7 +136,7 @@ namespace DailyExpenses
             Console.WriteLine("1 - Доллар (90 руб.)");
             Console.WriteLine("2 - Евро (100 руб.)");
             Console.WriteLine("3 - Свой курс");
-            Console.Write("Выберите: ");
+            Console.WriteLine("Выберите: ");
 
             double rate;
             string currency;
@@ -146,9 +146,9 @@ namespace DailyExpenses
                 case "1": rate = 90; currency = "долл."; break;
                 case "2": rate = 100; currency = "евро"; break;
                 case "3":
-                    Console.Write("Курс: ");
+                    Console.WriteLine("Курс: ");
                     rate = ReadNumber(1, 1000);
-                    Console.Write("Валюта: ");
+                    Console.WriteLine("Валюта: ");
                     currency = Console.ReadLine();
                     break;
                 default:
@@ -165,7 +165,7 @@ namespace DailyExpenses
 
         static void SearchExpenses()
         {
-            Console.Write("Поиск: ");
+            Console.WriteLine("Поиск: ");
             string search = Console.ReadLine().ToLower();
 
             var found = expenses.Where(e => e.Name.ToLower().Contains(search)).ToList();

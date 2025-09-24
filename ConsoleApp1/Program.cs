@@ -10,12 +10,12 @@ namespace StoreApp
     class Product
     {
         private static int nextCode = 1000;
-        public int Code { get; }
-        public string Name { get; }
-        public decimal Price { get; private set; }
-        public int Quantity { get; private set; }
+        public int Code;
+        public string Name;
+        public decimal Price;
+        public int Quantity;
         public bool InStock => Quantity > 0;
-        public Category Category { get; }
+        public Category Category;
 
         public Product(string name, decimal price, int qty, Category cat)
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,8 +6,8 @@ namespace DailyExpenses
 {
     public class Expense
     {
-        public string Name { get; set; }
-        public double Amount { get; set; }
+        public string Name;
+        public double Amount;
 
         public Expense(string name, double amount)
         {

@@ -159,24 +159,34 @@ class Program
     {
         Console.WriteLine("1 По названию 2 По автору 3 По жанру");
         Console.Write("Выберите тип поиска: ");
+
         if (!int.TryParse(Console.ReadLine(), out var t))
             return;
+
         IEnumerable<Book> res = Enumerable.Empty<Book>();
-        if (t == 1)
+
+        switch (t)
         {
-            var s = ReadNonEmpty("Часть названия: ");
-            res = books.Where(b => b.Title.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0);
+            case 1:
+                var titleSearch = ReadNonEmpty("Часть названия: ");
+                res = books.Where(b => b.Title.IndexOf(titleSearch, StringComparison.OrdinalIgnoreCase) >= 0);
+                break;
+
+            case 2:
+                var authorSearch = ReadNonEmpty("Часть имени автора: ");
+                res = books.Where(b => b.Author.IndexOf(authorSearch, StringComparison.OrdinalIgnoreCase) >= 0);
+                break;
+
+            case 3:
+                var genre = ReadGenre();
+                res = books.Where(b => b.Genre == genre);
+                break;
+
+            default:
+                Console.WriteLine("Неверный выбор");
+                return;
         }
-        if (t == 2)
-        {
-            var s = ReadNonEmpty("Часть имени автора: ");
-            res = books.Where(b => b.Author.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0);
-        }
-        if (t == 3)
-        {
-            var g = ReadGenre();
-            res = books.Where(b => b.Genre == g);
-        }
+
         Print(res);
     }
 

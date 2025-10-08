@@ -1,194 +1,200 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
-namespace DailyExpenses
+class TextStatistics
 {
-    public class Expense
+    public string OriginalText;
+    public int WordCount;
+    public string ShortestWord;
+    public string LongestWord;
+    public int SentenceCount;
+    public int VowelCount;
+    public int ConsonantCount;
+    public Dictionary<char, int> LetterFrequency;
+
+    public void Print()
     {
-        public string Name { get; set; }
-        public double Amount { get; set; }
+        Console.WriteLine($"Количество слов: {WordCount}");
+        Console.WriteLine($"Самое короткое слово: {ShortestWord}");
+        Console.WriteLine($"Самое длинное слово: {LongestWord}");
+        Console.WriteLine($"Количество предложений: {SentenceCount}");
+        Console.WriteLine($"Гласных: {VowelCount}");
+        Console.WriteLine($"Согласных: {ConsonantCount}");
+        Console.WriteLine("Частота букв:");
 
-        public Expense(string name, double amount)
+        foreach (var pair in LetterFrequency.OrderBy(x => x.Key))
         {
-            Name = name;
-            Amount = amount;
-        }
-
-        public override string ToString()
-        {
-            return $"{Name}; {Amount} рубле";
-        }
-    }
-
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            List<Expense> expenses = new List<Expense>();
-            Console.WriteLine("Введите количество операций (от 2 до 40):");
-            int n;
-            while (!int.TryParse(Console.ReadLine(), out n) || n < 2 || n > 40)
-            {
-                Console.WriteLine("Неверное значение. Введите число от 2 до 40:");
-            }
-
-            Console.WriteLine("Введите траты по шаблону: (Название; Сумма)");
-            for (int i = 0; i < n; i++)
-            {
-                string line;
-                while (true)
-                {
-                    line = Console.ReadLine().Trim();
-
-                    {
-
-                        string[] parts = line.Split(';');
-                        if (parts.Length == 2)
-                        {
-                            string name = parts[0].Trim();
-                            if (double.TryParse(parts[1].Trim(), out double amount) && amount > 0)
-                            {
-                                expenses.Add(new Expense(name, amount));
-                                break;
-                            }
-                        }
-                    }
-                    Console.WriteLine("Неверный формат. Введите по шаблону: (Название; Сумма)");
-                }
-            }
-
-            while (true)
-            {
-                Console.WriteLine("\nМеню:");
-                Console.WriteLine("1. Вывод данных");
-                Console.WriteLine("2. Статистика (среднее, максимальное, минимальное, сумма)");
-                Console.WriteLine("3. Сортировка по цене (пузырьковая сортировка)");
-                Console.WriteLine("4. Конвертация валюты");
-                Console.WriteLine("5. Поиск по названию");
-                Console.WriteLine("0. Выход");
-                Console.Write("Выберите пункт: ");
-                string choice = Console.ReadLine();
-
-                switch (choice)
-                {
-                    case "1":
-                        Console.WriteLine("\nДанные:");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "2":
-                        if (expenses.Count > 0)
-                        {
-                            double sum = expenses.Sum(e => e.Amount);
-                            double avg = sum / expenses.Count;
-                            double max = expenses.Max(e => e.Amount);
-                            double min = expenses.Min(e => e.Amount);
-                            Console.WriteLine($"\nСтатистика:");
-                            Console.WriteLine($"Сумма: {sum} рубле");
-                            Console.WriteLine($"Среднее: {avg:F2} рубле");
-                            Console.WriteLine($"Максимум: {max} рубле");
-                            Console.WriteLine($"Минимум: {min} рубле");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Нет данных.");
-                        }
-                        break;
-                    case "3":
-                        BubbleSort(expenses);
-                        Console.WriteLine("\nДанные отсортированы по цене (по возрастанию):");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "4":
-                        Console.WriteLine("\nВыберите валюту для конвертации:");
-                        Console.WriteLine("1. доллар (курс: 90 рубле за 1 доллар)");
-                        Console.WriteLine("2. евро (курс: 100 рубле за 1 евро)");
-                        Console.WriteLine("3. Ввести свой курс");
-                        Console.Write("Выбор: ");
-                        string currChoice = Console.ReadLine();
-                        double rate = 1.0;
-                        string newCurrency = "";
-                        switch (currChoice)
-                        {
-                            case "1":
-                                rate = 90.0;
-                                newCurrency = "доллар";
-                                break;
-                            case "2":
-                                rate = 100.0;
-                                newCurrency = "евро";
-                                break;
-                            case "3":
-                                Console.Write("Введите курс: ");
-                                if (double.TryParse(Console.ReadLine(), out rate) && rate > 0)
-                                {
-                                    Console.Write("Введите название валюты: ");
-                                    newCurrency = Console.ReadLine().Trim();
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Неверный курс.");
-                                    continue;
-                                }
-                                break;
-                            default:
-                                Console.WriteLine("Неверный выбор.");
-                                continue;
-                        }
-                        Console.WriteLine($"\nКонвертированные данные в {newCurrency}:");
-                        foreach (var exp in expenses)
-                        {
-                            double converted = exp.Amount / rate;
-                            Console.WriteLine($"{exp.Name}; {converted:F2} {newCurrency}");
-                        }
-                        break;
-                    case "5":
-                        Console.Write("Введите название для поиска: ");
-                        string keyword = Console.ReadLine().Trim();
-                        var found = expenses.Where(e => e.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
-                        if (found.Count > 0)
-                        {
-                            Console.WriteLine("\nНайденные траты:");
-                            foreach (var exp in found)
-                            {
-                                Console.WriteLine(exp);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Ничего не найдено.");
-                        }
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("Неверный выбор.");
-                        break;
-                }
-            }
-        }
-
-        static void BubbleSort(List<Expense> list)
-        {
-            int n = list.Count;
-            for (int i = 0; i < n - 1; i++)
-            {
-                for (int j = 0; j < n - i - 1; j++)
-                {
-                    if (list[j].Amount > list[j + 1].Amount)
-                    {
-                        Expense temp = list[j];
-                        list[j] = list[j + 1];
-                        list[j + 1] = temp;
-                    }
-                }
-            }
+            Console.WriteLine($"{pair.Key} : {pair.Value}");
         }
     }
 }
+
+class Program
+{
+    static char[] vowels = { 'а','е','ё','и','о','у','ы','э','ю','я',
+                             'a','e','i','o','u','y' };
+    static char[] consonants = { 'б','в','г','д','ж','з','й','к','л','м','н','п','р','с','т','ф','х','ц','ч','ш','щ',
+                                 'b','c','d','f','g','h','j','k','l','m','n','p','q','r','s','t','v','w','x','z' };
+
+    static void Main()
+    {
+
+
+        List<TextStatistics> history = new List<TextStatistics>();
+
+        while (true)
+        {
+            Console.WriteLine("1. Ввести новый текст");
+            Console.WriteLine("2. Показать всю статистику по прошлым текстам");
+            Console.WriteLine("3. Выход");
+            Console.Write("Выберите пункт: ");
+            string choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                Console.WriteLine("\nВведите текст (минимум 100 символов):");
+                StringBuilder inputBuilder = new StringBuilder();
+                string line;
+                int totalChars = 0;
+
+                while (totalChars < 100)
+                {
+                    line = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        Console.WriteLine("Нужно ввести хотя бы 100 символов. Продолжайте ввод.");
+                        continue;
+                    }
+
+                    inputBuilder.AppendLine(line);
+                    totalChars += line.Length;
+
+                    if (totalChars >= 100)
+                        break;
+
+                    Console.WriteLine($"Введено {totalChars}/100 символов. Продолжайте:");
+                }
+
+                string input = inputBuilder.ToString().Trim();
+
+                TextStatistics stats = AnalyzeText(input);
+                history.Add(stats);
+
+                Console.WriteLine("\nРезультат анализа:");
+                stats.Print();
+                Console.WriteLine();
+            }
+            else if (choice == "2")
+            {
+                if (history.Count == 0)
+                {
+                    Console.WriteLine("История пуста.\n");
+                }
+                else
+                {
+                    for (int i = 0; i < history.Count; i++)
+                    {
+                        Console.WriteLine($"Текст #{i + 1}:");
+                        history[i].Print();
+                        Console.WriteLine();
+                    }
+                }
+            }
+            else if (choice == "3")
+            {
+                Console.WriteLine("Выход из программы...");
+                break;
+            }
+            else
+            {
+                Console.WriteLine("Неверный ввод. Попробуйте снова.\n");
+            }
+        }
+    }
+
+    static TextStatistics AnalyzeText(string text)
+    {
+        TextStatistics stats = new TextStatistics();
+        stats.OriginalText = text;
+        stats.LetterFrequency = new Dictionary<char, int>();
+
+
+        char[] wordSeparators = { ' ', '\t', '\n', ',', '.', '!', '?', ';', ':', '(', ')', '[', ']', '{', '}', '"', '\'', '–', '—', '…' };
+
+        string[] words = text.Split(wordSeparators, StringSplitOptions.RemoveEmptyEntries)
+                            .Where(word => word.Any(char.IsLetter))
+                            .ToArray();
+
+        stats.WordCount = words.Length;
+
+        if (words.Length > 0)
+        {
+            stats.ShortestWord = words[0];
+            stats.LongestWord = words[0];
+
+            foreach (string word in words)
+            {
+                string cleanWord = new string(word.Where(char.IsLetter).ToArray());
+
+                if (string.IsNullOrEmpty(cleanWord))
+                    continue;
+
+                if (cleanWord.Length < stats.ShortestWord.Length)
+                    stats.ShortestWord = cleanWord;
+                if (cleanWord.Length > stats.LongestWord.Length)
+                    stats.LongestWord = cleanWord;
+            }
+        }
+        else
+        {
+            stats.ShortestWord = "нет слов";
+            stats.LongestWord = "нет слов";
+        }
+
+        stats.SentenceCount = 0;
+        bool inSentence = false;
+
+        for (int i = 0; i < text.Length; i++)
+        {
+            char ch = text[i];
+
+            if (char.IsLetter(ch) && !inSentence)
+            {
+                inSentence = true;
+                stats.SentenceCount++;
+            }
+            else if ((ch == '.' || ch == '!' || ch == '?') && inSentence)
+            {
+                if (i == text.Length - 1 || !char.IsLetter(text[i + 1]))
+                {
+                    inSentence = false;
+                }
+            }
+        }
+
+        stats.VowelCount = 0;
+        stats.ConsonantCount = 0;
+
+        foreach (char ch in text)
+        {
+            char lowerCh = char.ToLower(ch);
+
+            if (Array.IndexOf(vowels, lowerCh) >= 0)
+                stats.VowelCount++;
+            else if (Array.IndexOf(consonants, lowerCh) >= 0)
+                stats.ConsonantCount++;
+
+            if (char.IsLetter(lowerCh))
+            {
+                if (!stats.LetterFrequency.ContainsKey(lowerCh))
+                    stats.LetterFrequency[lowerCh] = 0;
+                stats.LetterFrequency[lowerCh]++;
+            }
+        }
+
+        return stats;
+    }
+}
+

@@ -143,11 +143,7 @@ class Program
                     stats.LongestWord = cleanWord;
             }
         }
-        else
-        {
-            stats.ShortestWord = "нет слов";
-            stats.LongestWord = "нет слов";
-        }
+
 
         stats.SentenceCount = 0;
         bool inSentence = false;

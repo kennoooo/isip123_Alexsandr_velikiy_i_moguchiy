@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-class TextStatistics
+class TextStat
 {
     public string OriginalText;
     public int WordCount;
@@ -33,14 +33,14 @@ class TextStatistics
 
 class Program
 {
-    static char[] vowels = { 'а','е','ё','и','о','у','ы','э','ю','я'};
-    static char[] consonants = { 'б','в','г','д','ж','з','й','к','л','м','н','п','р','с','т','ф','х','ц','ч','ш','щ'};
+    static char[] vowels = { 'а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я' };
+    static char[] consonants = { 'б', 'в', 'г', 'д', 'ж', 'з', 'й', 'к', 'л', 'м', 'н', 'п', 'р', 'с', 'т', 'ф', 'х', 'ц', 'ч', 'ш', 'щ' };
 
     static void Main()
     {
 
 
-        List<TextStatistics> history = new List<TextStatistics>();
+        List<TextStat> history = new List<TextStat>();
 
         while (true)
         {
@@ -77,7 +77,7 @@ class Program
 
                 string input = inputBuilder.ToString().Trim();
 
-                TextStatistics stats = AnalyzeText(input);
+                TextStat stats = AnalyzeText(input);
                 history.Add(stats);
 
                 Console.WriteLine("\nРезультат анализа:");
@@ -112,9 +112,9 @@ class Program
         }
     }
 
-    static TextStatistics AnalyzeText(string text)
+    static TextStat AnalyzeText(string text)
     {
-        TextStatistics stats = new TextStatistics();
+        TextStat stats = new TextStat();
         stats.OriginalText = text;
         stats.LetterFrequency = new Dictionary<char, int>();
 
@@ -189,4 +189,3 @@ class Program
         return stats;
     }
 }
-

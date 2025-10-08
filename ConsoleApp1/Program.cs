@@ -124,7 +124,7 @@ class Program
         var vals = Enum.GetValues(typeof(Genre)).Cast<Genre>().ToArray();
         for (; ; )
         {
-            Console.WriteLine("Выберите жанр:");
+            Console.WriteLine("Выберите жанр: ");
             for (int i = 0; i < vals.Length; i++) Console.WriteLine($"{i + 1} - {vals[i]}");
             Console.Write("Номер жанра: ");
             if (int.TryParse(Console.ReadLine(), out var idx) && idx >= 1 && idx <= vals.Length) 
@@ -182,15 +182,37 @@ class Program
 
     static void SortMenu()
     {
-        Console.WriteLine("1 По названию 2 По году"); Console.Write("Выберите: ");
-        if (!int.TryParse(Console.ReadLine(), out var t))
+        Console.WriteLine("1 По названию 2 По году");
+        Console.Write("Выберите: ");
+        if (!int.TryParse(Console.ReadLine(), out var sortType))
             return;
-        Console.WriteLine("1 По возрастанию 2 По убыванию"); Console.Write("Направление: ");
-        if (!int.TryParse(Console.ReadLine(), out var d))
+
+        Console.WriteLine("1 По возрастанию 2 По убыванию");
+        Console.Write("Направление: ");
+        if (!int.TryParse(Console.ReadLine(), out var direction))
             return;
-        bool asc = d == 1;
-        IEnumerable<Book> outb = t == 1 ? (asc ? books.OrderBy(b => b.Title) : books.OrderByDescending(b => b.Title))
-                                      : (asc ? books.OrderBy(b => b.Year) : books.OrderByDescending(b => b.Year));
+
+        IEnumerable<Book> outb;
+
+        switch (sortType)
+        {
+            case 1 when direction == 1: 
+                outb = books.OrderBy(b => b.Title);
+                break;
+            case 1 when direction == 2: 
+                outb = books.OrderByDescending(b => b.Title);
+                break;
+            case 2 when direction == 1: 
+                outb = books.OrderBy(b => b.Year);
+                break;
+            case 2 when direction == 2: 
+                outb = books.OrderByDescending(b => b.Year);
+                break;
+            default:
+                Console.WriteLine("Неверный выбор");
+                return;
+        }
+
         Print(outb);
     }
 
@@ -211,13 +233,16 @@ class Program
     {
         var g = books.GroupBy(b => b.Author).Select(gr => new { Author = gr.Key, Count = gr.Count() }).OrderByDescending(x => x.Count);
         Console.WriteLine("Количество книг по авторам");
-        foreach (var a in g) Console.WriteLine($"{a.Author} — {a.Count} шт.");
+        foreach (var a in g) 
+            Console.WriteLine($"{a.Author} — {a.Count} шт.");
     }
 
     static void Print(IEnumerable<Book> list)
     {
         var arr = list.ToArray();
-        if (!arr.Any()) { Console.WriteLine("Ничего не найдено."); return; }
+        if (!arr.Any()) { Console.WriteLine("Ничего не найдено."); 
+            return; 
+        }
         Console.WriteLine("Результаты");
         foreach (var b in arr) Console.WriteLine(b);
         Console.WriteLine($"Всего: {arr.Length}");

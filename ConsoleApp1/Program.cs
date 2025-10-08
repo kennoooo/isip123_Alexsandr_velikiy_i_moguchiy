@@ -151,8 +151,10 @@ class Program
     {
         var id = ReadInt("Id для удаления: ", 1, int.MaxValue);
         var b = books.FirstOrDefault(x => x.Id == id);
-        if (b == null) Console.WriteLine("Книга с таким Id не найдена.");
-        else { books.Remove(b); Console.WriteLine("Книга удалена."); }
+        if 
+            (b == null) Console.WriteLine("Книга с таким Id не найдена.");
+        else 
+        { books.Remove(b); Console.WriteLine("Книга удалена."); }
     }
 
     static void Find()

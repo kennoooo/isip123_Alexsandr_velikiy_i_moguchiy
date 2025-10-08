@@ -118,9 +118,7 @@ class Program
         stats.OriginalText = text;
         stats.LetterFrequency = new Dictionary<char, int>();
 
-
-        char[] wordSeparators = { ' ', '\t', '\n', ',', '.', '!', '?', ';', ':', '(', ')', '[', ']', '{', '}', '"', '\'', '–', '—', '…' };
-
+        char[] wordSeparators = { ' ', '\n', ',', '.', '!', '?', ';', ':', '(', ')', '[', ']', '{', '}', '"', '–', };
         string[] words = text.Split(wordSeparators, StringSplitOptions.RemoveEmptyEntries)
                             .Where(word => word.Any(char.IsLetter))
                             .ToArray();

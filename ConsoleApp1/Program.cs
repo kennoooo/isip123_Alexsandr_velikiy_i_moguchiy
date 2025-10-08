@@ -29,14 +29,13 @@ class Program
     static List<Book> books = new List<Book>();
     static void Main()
     {
-        Console.OutputEncoding = Encoding.UTF8;
-        Console.InputEncoding = Encoding.UTF8;
+
         Seed();
         while (true)
         {
             try
             {
-                Console.WriteLine("\n0 Выход\n1 Добавить\n2 Удалить\n3 Найти\n4 Сортировать\n5 Мин/Макс\n6 По авторам\n7 Показать все");
+                Console.WriteLine("0 Выход\n1 Добавить\n2 Удалить\n3 Найти\n4 Сортировать\n5 Мин/Макс\n6 По авторам\n7 Показать все");
                 Console.Write("Введите команду: ");
                 if (!int.TryParse(Console.ReadLine(), out var cmd))
                     continue;
@@ -161,9 +160,15 @@ class Program
         if (!int.TryParse(Console.ReadLine(), out var t))
             return;
         IEnumerable<Book> res = Enumerable.Empty<Book>();
-        if (t == 1) { var s = ReadNonEmpty("Часть названия: "); res = books.Where(b => b.Title.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
-        if (t == 2) { var s = ReadNonEmpty("Часть имени автора: "); res = books.Where(b => b.Author.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
-        if (t == 3) { var g = ReadGenre(); res = books.Where(b => b.Genre == g); }
+        if (t == 1) 
+        { var s = ReadNonEmpty("Часть названия: "); 
+            res = books.Where(b => b.Title.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
+        if (t == 2) 
+        { var s = ReadNonEmpty("Часть имени автора: "); 
+            res = books.Where(b => b.Author.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
+        if (t == 3) 
+        { var g = ReadGenre(); 
+            res = books.Where(b => b.Genre == g); }
         Print(res);
     }
 

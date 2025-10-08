@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -60,11 +60,11 @@ class Program
     static void Seed()
     {
         books.AddRange(new[] {
-            new Book("Мастер и Маргарита","М. Булгаков",Genre.Художественная,1967,499.99m,3),
-            new Book("Краткая история времени","С. Хокинг",Genre.Наука,1988,799.5m,2),
-            new Book("Властелин колец","Дж. Р. Р. Толкин",Genre.Фэнтези,1954,1299m,5),
-            new Book("Приключения Шерлока Холмса","А. Конан Дойл",Genre.Детектив,1905,299m,4),
-            new Book("Размышления","Марк Аврелий",Genre.НонФикшн,180,199m,1)
+            new Book("Мастер и Маргарита","М. Булгаков",Genre.Художественная,1967,499,3),
+            new Book("Краткая история времени","С. Хокинг",Genre.Наука,1988,799,2),
+            new Book("Властелин колец","Дж. Р. Р. Толкин",Genre.Фэнтези,1954,1299,5),
+            new Book("Приключения Шерлока Холмса","А. Конан Дойл",Genre.Детектив,1905,299,4),
+            new Book("Размышления","Марк Аврелий",Genre.НонФикшн,180,199,1)
         });
     }
 
@@ -104,7 +104,8 @@ class Program
         {
             Console.Write(prompt); var s = Console.ReadLine();
             if (TryParseDecimalFlexible(s, out var d) && d >= 0)
-                return d; Console.WriteLine("Введите неотрицательное число (пример: 199.99 или 199,99).");
+                return d; 
+            Console.WriteLine("Введите неотрицательное число.");
         }
     }
 
@@ -126,7 +127,8 @@ class Program
             Console.WriteLine("Выберите жанр:");
             for (int i = 0; i < vals.Length; i++) Console.WriteLine($"{i + 1} - {vals[i]}");
             Console.Write("Номер жанра: ");
-            if (int.TryParse(Console.ReadLine(), out var idx) && idx >= 1 && idx <= vals.Length) return vals[idx - 1];
+            if (int.TryParse(Console.ReadLine(), out var idx) && idx >= 1 && idx <= vals.Length) 
+                return vals[idx - 1];
             Console.WriteLine("Неверный выбор жанра.");
         }
     }
@@ -160,15 +162,21 @@ class Program
         if (!int.TryParse(Console.ReadLine(), out var t))
             return;
         IEnumerable<Book> res = Enumerable.Empty<Book>();
-        if (t == 1) 
-        { var s = ReadNonEmpty("Часть названия: "); 
-            res = books.Where(b => b.Title.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
-        if (t == 2) 
-        { var s = ReadNonEmpty("Часть имени автора: "); 
-            res = books.Where(b => b.Author.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0); }
-        if (t == 3) 
-        { var g = ReadGenre(); 
-            res = books.Where(b => b.Genre == g); }
+        if (t == 1)
+        {
+            var s = ReadNonEmpty("Часть названия: ");
+            res = books.Where(b => b.Title.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+        if (t == 2)
+        {
+            var s = ReadNonEmpty("Часть имени автора: ");
+            res = books.Where(b => b.Author.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+        if (t == 3)
+        {
+            var g = ReadGenre();
+            res = books.Where(b => b.Genre == g);
+        }
         Print(res);
     }
 

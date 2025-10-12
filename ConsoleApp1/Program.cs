@@ -185,9 +185,22 @@ namespace SimpleUniversity
             var sys = new Univ();
 
             var t1 = sys.AddTeacher("Иван Петров", 45, "ivan@uni.ru");
+            var t2 = sys.AddTeacher("Мария Соколова", 38, "maria@uni.ru");
+            var t3 = sys.AddTeacher("Андрей Кузнецов", 50, "andrey@uni.ru");
+            var t4 = sys.AddTeacher("Ольга Морозова", 42, "olga@uni.ru");
+            var t5 = sys.AddTeacher("Дмитрий Орлов", 35, "dmitry@uni.ru");
+
             var c1 = sys.AddCourse("Введение в C#");
+            var c2 = sys.AddCourse("Базы данных");
+            var c3 = sys.AddCourse("Алгоритмы и структуры данных");
+            var c4 = sys.AddCourse("Веб-разработка");
+            var c5 = sys.AddCourse("Машинное обучение");
+
             var s1 = sys.AddStudent("Анна Смирнова", 20, "anna@student.ru");
-            sys.EnrollStudentToCourse(s1, c1);
+            var s2 = sys.AddStudent("Павел Иванов", 21, "pavel@student.ru");
+            var s3 = sys.AddStudent("Екатерина Орлова", 19, "ekaterina@student.ru");
+            var s4 = sys.AddStudent("Михаил Сергеев", 22, "mikhail@student.ru");
+            var s5 = sys.AddStudent("Юлия Кузьмина", 20, "yulia@student.ru");
 
             while (true)
             {

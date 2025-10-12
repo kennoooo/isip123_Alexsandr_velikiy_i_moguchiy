@@ -135,9 +135,12 @@ namespace SimpleUniversity
 
         public void PrintAllOneLine()
         {
-            Console.WriteLine("\nСтуденты");
-            Console.WriteLine("\nПреподаватели");
-            Console.WriteLine("\nКурсы");
+            Console.WriteLine("\n-- Студенты --");
+            Console.WriteLine(string.Join(Environment.NewLine, students.Values.Select(s => s.OneLine())));
+            Console.WriteLine("\n-- Преподаватели --");
+            Console.WriteLine(string.Join(Environment.NewLine, teachers.Values.Select(t => t.OneLine())));
+            Console.WriteLine("\n-- Курсы --");
+            Console.WriteLine(string.Join(Environment.NewLine, courses.Values.Select(c => c.OneLine())));
             Console.WriteLine();
         }
 
@@ -296,6 +299,7 @@ namespace SimpleUniversity
 
                         case "5":
                             sys.PrintAllOneLine();
+
                             break;
 
                         default:

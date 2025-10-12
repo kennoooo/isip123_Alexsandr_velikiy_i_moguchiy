@@ -1,192 +1,270 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DailyExpenses
+namespace UniversityApp
 {
-    public class Expense
+    abstract class Person
     {
-        public string Name { get; set; }
-        public double Amount { get; set; }
+        public int Id { get; }
+        public string Name { get; private set; }
+        public int Age { get; private set; }
+        public string Contact { get; private set; }
+        protected Person(int id, string name, int age, string contact)
+        { Id = id; Name = name; Age = age; Contact = contact; }
+        public abstract string GetInfo();
+    }
 
-        public Expense(string name, double amount)
+    class Student : Person
+    {
+        private readonly HashSet<int> courseIds = new();
+        public Student(int id, string name, int age, string contact) : base(id, name, age, contact) { }
+        public void Enroll(int courseId) { if (!courseIds.Add(courseId)) throw new InvalidOperationException("Студент уже записан на курс."); }
+        public void Unenroll(int courseId) { courseIds.Remove(courseId); }
+        public IEnumerable<int> Courses => courseIds;
+        public override string GetInfo() => $"Студент #{Id}: {Name}, {Age} лет, контакт: {Contact}";
+    }
+
+    class Teacher : Person
+    {
+        private readonly HashSet<int> courseIds = new();
+        public Teacher(int id, string name, int age, string contact) : base(id, name, age, contact) { }
+        public void AssignCourse(int courseId) => courseIds.Add(courseId);
+        public void RemoveCourse(int courseId) => courseIds.Remove(courseId);
+        public IEnumerable<int> Courses => courseIds;
+        public override string GetInfo() => $"Преподаватель #{Id}: {Name}, {Age} лет, контакт: {Contact}";
+    }
+
+    class Course
+    {
+        public int Id { get; }
+        public string Title { get; }
+        public string Description { get; }
+        public int? TeacherId { get; private set; }
+        private readonly HashSet<int> students = new();
+        public Course(int id, string title, string description = "") { Id = id; Title = title; Description = description; }
+        public void SetTeacher(int? tId) => TeacherId = tId;
+        public void AddStudent(int sId) { if (!students.Add(sId)) throw new InvalidOperationException("Студент уже на курсе."); }
+        public void RemoveStudent(int sId) => students.Remove(sId);
+        public IEnumerable<int> Students => students;
+        public string GetInfo()
         {
-            Name = name;
-            Amount = amount;
+            var t = TeacherId.HasValue ? TeacherId.Value.ToString() : "не назначен";
+            return $"Курс #{Id}: {Title}\nОписание: {Description}\nПреподаватель ID: {t}\nСтудентов: {students.Count}";
+        }
+    }
+
+    class UniversitySystem
+    {
+        private readonly Dictionary<int, Student> students = new();
+        private readonly Dictionary<int, Teacher> teachers = new();
+        private readonly Dictionary<int, Course> courses = new();
+        private int nextStudent = 1, nextTeacher = 1, nextCourse = 1;
+
+        // Добавление
+        public int AddStudent(string name, int age, string contact)
+        {
+            var id = nextStudent++;
+            students[id] = new Student(id, name, age, contact);
+            return id;
+        }
+        public int AddTeacher(string name, int age, string contact)
+        {
+            var id = nextTeacher++;
+            teachers[id] = new Teacher(id, name, age, contact);
+            return id;
+        }
+        public int AddCourse(string title, string desc = "", int? teacherId = null)
+        {
+            var id = nextCourse++;
+            var c = new Course(id, title, desc);
+            if (teacherId.HasValue)
+            {
+                if (!teachers.ContainsKey(teacherId.Value)) throw new KeyNotFoundException("Преподаватель не найден.");
+                c.SetTeacher(teacherId.Value);
+                teachers[teacherId.Value].AssignCourse(id);
+            }
+            courses[id] = c;
+            return id;
         }
 
-        public override string ToString()
+        // Получение
+        public Student GetStudent(int id) => students.TryGetValue(id, out var s) ? s : throw new KeyNotFoundException("Студент не найден.");
+        public Teacher GetTeacher(int id) => teachers.TryGetValue(id, out var t) ? t : throw new KeyNotFoundException("Преподаватель не найден.");
+        public Course GetCourse(int id) => courses.TryGetValue(id, out var c) ? c : throw new KeyNotFoundException("Курс не найден.");
+
+        // Удаление с каскадом
+        public void RemoveStudent(int id)
         {
-            return $"{Name}; {Amount} рубле";
+            if (!students.ContainsKey(id)) throw new KeyNotFoundException("Студент не найден.");
+            // удалить студента из всех курсов
+            foreach (var c in courses.Values) c.RemoveStudent(id);
+            students.Remove(id);
+        }
+
+        public void RemoveTeacher(int id)
+        {
+            if (!teachers.ContainsKey(id)) throw new KeyNotFoundException("Преподаватель не найден.");
+            // отвязать преподавателя от курсов
+            foreach (var c in courses.Values.Where(x => x.TeacherId == id)) c.SetTeacher(null);
+            teachers.Remove(id);
+        }
+
+        public void RemoveCourse(int id)
+        {
+            if (!courses.ContainsKey(id)) throw new KeyNotFoundException("Курс не найден.");
+            // удалить курс из студентов и у преподавателя
+            foreach (var s in students.Values) s.Unenroll(id);
+            var tId = courses[id].TeacherId;
+            if (tId.HasValue && teachers.ContainsKey(tId.Value)) teachers[tId.Value].RemoveCourse(id);
+            courses.Remove(id);
+        }
+
+        // Операции
+        public void AssignTeacher(int courseId, int teacherId)
+        {
+            var c = GetCourse(courseId);
+            var t = GetTeacher(teacherId);
+            // отвязать старого
+            if (c.TeacherId.HasValue && teachers.ContainsKey(c.TeacherId.Value)) teachers[c.TeacherId.Value].RemoveCourse(courseId);
+            c.SetTeacher(teacherId);
+            t.AssignCourse(courseId);
+        }
+
+        public void EnrollStudent(int studentId, int courseId)
+        {
+            var s = GetStudent(studentId);
+            var c = GetCourse(courseId);
+            c.AddStudent(studentId);
+            s.Enroll(courseId);
+        }
+
+        // Единая функция вывода всех данных
+        public void PrintAllData()
+        {
+            Console.WriteLine("\n--- Все студенты ---");
+            if (!students.Any()) Console.WriteLine("(Нет студентов)");
+            foreach (var s in students.Values) Console.WriteLine(s.GetInfo() + "\nКурсы: " + (s.Courses.Any() ? string.Join(", ", s.Courses) : "—"));
+
+            Console.WriteLine("\n--- Все преподаватели ---");
+            if (!teachers.Any()) Console.WriteLine("(Нет преподавателей)");
+            foreach (var t in teachers.Values) Console.WriteLine(t.GetInfo() + "\nКурсы: " + (t.Courses.Any() ? string.Join(", ", t.Courses) : "—"));
+
+            Console.WriteLine("\n--- Все курсы ---");
+            if (!courses.Any()) Console.WriteLine("(Нет курсов)");
+            foreach (var c in courses.Values)
+            {
+                Console.WriteLine(c.GetInfo());
+                if (c.Students.Any()) Console.WriteLine("Список студентов (ID): " + string.Join(", ", c.Students));
+                Console.WriteLine();
+            }
         }
     }
 
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            List<Expense> expenses = new List<Expense>();
-            Console.WriteLine("Введите количество операций (от 2 до 40):");
-            int n;
-            while (!int.TryParse(Console.ReadLine(), out n) || n < 2 || n > 40)
-            {
-                Console.WriteLine("Неверное значение. Введите число от 2 до 40:");
-            }
+            var sys = new UniversitySystem();
 
-            Console.WriteLine("Введите траты по шаблону: (Название; Сумма)");
-            for (int i = 0; i < n; i++)
-            {
-                string line;
-                while (true)
-                {
-                    line = Console.ReadLine().Trim();
-
-                    {
-
-                        string[] parts = line.Split(';');
-                        if (parts.Length == 2)
-                        {
-                            string name = parts[0].Trim();
-                            if (double.TryParse(parts[1].Trim(), out double amount) && amount > 0)
-                            {
-                                expenses.Add(new Expense(name, amount));
-                                break;
-                            }
-                        }
-                    }
-                    Console.WriteLine("Неверный формат. Введите по шаблону: (Название; Сумма)");
-                }
-            }
+            // Пример данных
+            var tid = sys.AddTeacher("Иван Петров", 45, "ivan@uni.ru");
+            var cid = sys.AddCourse("Введение в C#", "Основы языка", tid);
+            var sid = sys.AddStudent("Анна Смирнова", 20, "anna@student.ru");
+            sys.EnrollStudent(sid, cid);
 
             while (true)
             {
-                Console.WriteLine("\nМеню:");
-                Console.WriteLine("1. Вывод данных");
-                Console.WriteLine("2. Статистика (среднее, максимальное, минимальное, сумма)");
-                Console.WriteLine("3. Сортировка по цене (пузырьковая сортировка)");
-                Console.WriteLine("4. Конвертация валюты");
-                Console.WriteLine("5. Поиск по названию");
-                Console.WriteLine("0. Выход");
+                Console.WriteLine("\n=== Меню ===");
+                Console.WriteLine("1) Добавить/Удалить (студент / преподаватель / курс)");
+                Console.WriteLine("2) Показать всё (вызов одной функции)");
+                Console.WriteLine("3) Назначить преподавателя на курс");
+                Console.WriteLine("4) Записать студента на курс");
+                Console.WriteLine("0) Выход");
                 Console.Write("Выберите пункт: ");
-                string choice = Console.ReadLine();
+                var choice = Console.ReadLine();
 
-                switch (choice)
+                try
                 {
-                    case "1":
-                        Console.WriteLine("\nДанные:");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "2":
-                        if (expenses.Count > 0)
-                        {
-                            double sum = expenses.Sum(e => e.Amount);
-                            double avg = sum / expenses.Count;
-                            double max = expenses.Max(e => e.Amount);
-                            double min = expenses.Min(e => e.Amount);
-                            Console.WriteLine($"\nСтатистика:");
-                            Console.WriteLine($"Сумма: {sum} рубле");
-                            Console.WriteLine($"Среднее: {avg:F2} рубле");
-                            Console.WriteLine($"Максимум: {max} рубле");
-                            Console.WriteLine($"Минимум: {min} рубле");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Нет данных.");
-                        }
-                        break;
-                    case "3":
-                        BubbleSort(expenses);
-                        Console.WriteLine("\nДанные отсортированы по цене (по возрастанию):");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "4":
-                        Console.WriteLine("\nВыберите валюту для конвертации:");
-                        Console.WriteLine("1. доллар (курс: 90 рубле за 1 доллар)");
-                        Console.WriteLine("2. евро (курс: 100 рубле за 1 евро)");
-                        Console.WriteLine("3. Ввести свой курс");
-                        Console.Write("Выбор: ");
-                        string currChoice = Console.ReadLine();
-                        double rate = 1.0;
-                        string newCurrency = "";
-                        switch (currChoice)
-                        {
-                            case "1":
-                                rate = 90.0;
-                                newCurrency = "доллар";
-                                break;
-                            case "2":
-                                rate = 100.0;
-                                newCurrency = "евро";
-                                break;
-                            case "3":
-                                Console.Write("Введите курс: ");
-                                if (double.TryParse(Console.ReadLine(), out rate) && rate > 0)
-                                {
-                                    Console.Write("Введите название валюты: ");
-                                    newCurrency = Console.ReadLine().Trim();
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Неверный курс.");
-                                    continue;
-                                }
-                                break;
-                            default:
-                                Console.WriteLine("Неверный выбор.");
-                                continue;
-                        }
-                        Console.WriteLine($"\nКонвертированные данные в {newCurrency}:");
-                        foreach (var exp in expenses)
-                        {
-                            double converted = exp.Amount / rate;
-                            Console.WriteLine($"{exp.Name}; {converted:F2} {newCurrency}");
-                        }
-                        break;
-                    case "5":
-                        Console.Write("Введите название для поиска: ");
-                        string keyword = Console.ReadLine().Trim();
-                        var found = expenses.Where(e => e.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
-                        if (found.Count > 0)
-                        {
-                            Console.WriteLine("\nНайденные траты:");
-                            foreach (var exp in found)
-                            {
-                                Console.WriteLine(exp);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Ничего не найдено.");
-                        }
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("Неверный выбор.");
-                        break;
-                }
-            }
-        }
+                    if (choice == "0") { Console.WriteLine("Выход. До свидания!"); break; }
 
-        static void BubbleSort(List<Expense> list)
-        {
-            int n = list.Count;
-            for (int i = 0; i < n - 1; i++)
-            {
-                for (int j = 0; j < n - i - 1; j++)
-                {
-                    if (list[j].Amount > list[j + 1].Amount)
+                    if (choice == "1")
                     {
-                        Expense temp = list[j];
-                        list[j] = list[j + 1];
-                        list[j + 1] = temp;
+                        Console.Write("Введите действие (добавить / удалить): ");
+                        var act = Console.ReadLine()?.Trim().ToLower();
+                        Console.Write("Тип (student / teacher / course): ");
+                        var type = Console.ReadLine()?.Trim().ToLower();
+
+                        if (act == "добавить")
+                        {
+                            if (type == "student")
+                            {
+                                Console.Write("Имя: "); var n = Console.ReadLine();
+                                Console.Write("Возраст: "); var a = int.Parse(Console.ReadLine() ?? "0");
+                                Console.Write("Контакт: "); var c = Console.ReadLine();
+                                Console.WriteLine($"Добавлен студент ID = {sys.AddStudent(n, a, c)}");
+                            }
+                            else if (type == "teacher")
+                            {
+                                Console.Write("Имя: "); var n = Console.ReadLine();
+                                Console.Write("Возраст: "); var a = int.Parse(Console.ReadLine() ?? "0");
+                                Console.Write("Контакт: "); var c = Console.ReadLine();
+                                Console.WriteLine($"Добавлен преподаватель ID = {sys.AddTeacher(n, a, c)}");
+                            }
+                            else if (type == "course")
+                            {
+                                Console.Write("Название: "); var t = Console.ReadLine();
+                                Console.Write("Описание: "); var d = Console.ReadLine();
+                                Console.Write("ID преподавателя (или пусто): "); var r = Console.ReadLine();
+                                int? tt = int.TryParse(r, out var num) ? num : null;
+                                Console.WriteLine($"Добавлен курс ID = {sys.AddCourse(t, d, tt)}");
+                            }
+                            else Console.WriteLine("Неизвестный тип.");
+                        }
+                        else if (act == "удалить")
+                        {
+                            if (type == "student")
+                            {
+                                Console.Write("ID студента для удаления: "); var id = int.Parse(Console.ReadLine() ?? "0");
+                                sys.RemoveStudent(id); Console.WriteLine("Студент удалён.");
+                            }
+                            else if (type == "teacher")
+                            {
+                                Console.Write("ID преподавателя для удаления: "); var id = int.Parse(Console.ReadLine() ?? "0");
+                                sys.RemoveTeacher(id); Console.WriteLine("Преподаватель удалён (курсы отвязаны).");
+                            }
+                            else if (type == "course")
+                            {
+                                Console.Write("ID курса для удаления: "); var id = int.Parse(Console.ReadLine() ?? "0");
+                                sys.RemoveCourse(id); Console.WriteLine("Курс удалён.");
+                            }
+                            else Console.WriteLine("Неизвестный тип.");
+                        }
+                        else Console.WriteLine("Неизвестное действие.");
                     }
+                    else if (choice == "2")
+                    {
+                        sys.PrintAllData(); // единая функция вывода
+                    }
+                    else if (choice == "3")
+                    {
+                        Console.Write("ID курса: "); var cidn = int.Parse(Console.ReadLine() ?? "0");
+                        Console.Write("ID преподавателя: "); var tidn = int.Parse(Console.ReadLine() ?? "0");
+                        sys.AssignTeacher(cidn, tidn);
+                        Console.WriteLine("Преподаватель назначен.");
+                    }
+                    else if (choice == "4")
+                    {
+                        Console.Write("ID студента: "); var sidn = int.Parse(Console.ReadLine() ?? "0");
+                        Console.Write("ID курса: "); var cidn = int.Parse(Console.ReadLine() ?? "0");
+                        sys.EnrollStudent(sidn, cidn);
+                        Console.WriteLine("Студент записан на курс.");
+                    }
+                    else Console.WriteLine("Неверный выбор.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Ошибка: " + ex.Message);
                 }
             }
         }

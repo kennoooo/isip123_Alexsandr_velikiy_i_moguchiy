@@ -120,7 +120,7 @@ namespace SimpleUniversity
             if (!teachers.ContainsKey(tid)) Console.WriteLine("Преподаватель не найден");
             var course = courses[cid];
             if (course.TeacherId.HasValue)
-                Console.Write ("У курса уже есть преподаватель. Сначала удалите преподавателя или курс.");
+                Console.Write("У курса уже есть преподаватель. Сначала удалите преподавателя или курс.");
             course.SetTeacher(tid);
             teachers[tid].Assign(cid);
         }
@@ -135,11 +135,11 @@ namespace SimpleUniversity
 
         public void PrintAllOneLine()
         {
-            Console.WriteLine("\n-- Студенты --");
+            Console.WriteLine("\nСтуденты");
             Console.WriteLine(string.Join(Environment.NewLine, students.Values.Select(s => s.OneLine())));
-            Console.WriteLine("\n-- Преподаватели --");
+            Console.WriteLine("\nПреподаватели");
             Console.WriteLine(string.Join(Environment.NewLine, teachers.Values.Select(t => t.OneLine())));
-            Console.WriteLine("\n-- Курсы --");
+            Console.WriteLine("\nКурсы");
             Console.WriteLine(string.Join(Environment.NewLine, courses.Values.Select(c => c.OneLine())));
             Console.WriteLine();
         }
@@ -234,22 +234,22 @@ namespace SimpleUniversity
                                     Console.Write("Возраст: "); var a = int.Parse(Console.ReadLine() ?? "0");
                                     Console.Write("Контакт: "); var co = Console.ReadLine();
                                     Console.WriteLine($"Добавлен студент ID = {sys.AddStudent(n ?? "", a, co ?? "")}");
-                                    break; 
+                                    break;
                                 case "2":
                                     Console.Write("Имя: "); n = Console.ReadLine();
                                     Console.Write("Возраст: "); a = int.Parse(Console.ReadLine() ?? "0");
                                     Console.Write("Контакт: "); co = Console.ReadLine();
                                     Console.WriteLine($"Добавлен преподаватель ID = {sys.AddTeacher(n ?? "", a, co ?? "")}");
-                                    break; 
+                                    break;
                                 case "3":
                                     Console.Write("Название курса: "); var title = Console.ReadLine();
                                     Console.WriteLine($"Добавлен курс ID = {sys.AddCourse(title ?? "")}");
-                                    break; 
+                                    break;
                                 default:
                                     Console.WriteLine("Отмена.");
                                     break;
                             }
-                            break; 
+                            break;
 
                         case "2":
                             Console.WriteLine("1) Удалить студента  2) Преподавателя  3) Курс  0) Отмена");

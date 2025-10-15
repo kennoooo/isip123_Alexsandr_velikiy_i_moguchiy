@@ -160,7 +160,7 @@ class Program
                 else
                 {
                     // Атакуем
-                    int playerBase = 8 // базовый урон игрока без оружия
+                    int playerBase = 8; // базовый урон игрока без оружия
                     int damage = Math.Max(1, playerBase + (p.Weapon?.Attack ?? 0) - enemy.Defense);
                     enemy.HP -= damage;
                     Console.WriteLine($"Вы атакуете и наносите {damage} урона (HP врага: {Math.Max(0, enemy.HP)})");

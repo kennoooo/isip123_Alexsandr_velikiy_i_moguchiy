@@ -1,194 +1,291 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace DailyExpenses
+/*
+ Простая консольная пошаговая мини-игра-роуглайк на C#.
+ - Игрок имеет здоровье и экипировку (оружие + доспехи).
+ - На каждом ходу 50/50: сундук или враг. Каждые 10 ходов — босс.
+ - В бою игрок ходит первым (Атака или Защита). Враг всегда отвечает.
+ - Особенности врагов: гоблин (шанс крита), скелет (игнор защиты игрока), маг (шанс заморозки — игрок пропускает следующий бой-ход).
+ - Предметы из сундука: зелье (полное лечение), оружие или доспех (можно подобрать/отбросить).
+
+ Код построен компактно и снабжён подробными комментариями по основным частям.
+*/
+
+class Program
 {
-    public class Expense
+    static Random rng = new Random();
+
+    // --- Простые структуры данных для предметов и существ ---
+    class Weapon { public string Name; public int Attack; public override string ToString() => $"{Name} (+{Attack} ATK)"; }
+    class Armor { public string Name; public int Defense; public override string ToString() => $"{Name} (+{Defense} DEF)"; }
+
+    class Player
     {
-        public string Name { get; set; }
-        public double Amount { get; set; }
-
-        public Expense(string name, double amount)
-        {
-            Name = name;
-            Amount = amount;
-        }
-
-        public override string ToString()
-        {
-            return $"{Name}; {Amount} рубле";
-        }
+        public int MaxHP = 100;
+        public int HP = 100;
+        public Weapon Weapon = new Weapon { Name = "Кулаки", Attack = 0 };
+        public Armor Armor = new Armor { Name = "Обычная одежда", Defense = 0 };
+        public bool Frozen = false; // если true — игрок пропускает следующий боевой ход
+        public bool Defending = false; // режим защиты на текущую атаку
+        public void HealFull() => HP = MaxHP;
     }
 
-    class Program
+    enum EnemyRace { Goblin, Skeleton, Mage }
+
+    class Enemy
     {
-        static void Main(string[] args)
+        public string Name;
+        public EnemyRace Race;
+        public int HP;
+        public int Attack;
+        public int Defense;
+        public double CritChance = 0.0;   // для гоблина
+        public double FreezeChance = 0.0; // для мага
+        public bool IgnorePlayerDefense = false; // для скелета
+        public override string ToString() => $"{Name} ({Race}) HP:{HP} ATK:{Attack} DEF:{Defense}";
+    }
+
+    // --- Базовые значения для обычных противников ---
+    static Enemy MakeBaseGoblin()
+    {
+        return new Enemy { Name = "Гоблин", Race = EnemyRace.Goblin, HP = 30, Attack = 8, Defense = 3, CritChance = 0.12 };
+    }
+    static Enemy MakeBaseSkeleton()
+    {
+        return new Enemy { Name = "Скелет", Race = EnemyRace.Skeleton, HP = 28, Attack = 9, Defense = 4, IgnorePlayerDefense = true };
+    }
+    static Enemy MakeBaseMage()
+    {
+        return new Enemy { Name = "Маг", Race = EnemyRace.Mage, HP = 24, Attack = 7, Defense = 2, FreezeChance = 0.18 };
+    }
+
+    // --- Боссы (наследуют особенности расы и модифицируют характеристики) ---
+    static Enemy MakeBoss(int bossIndex)
+    {
+        // bossIndex 0..3 — четыре разных босса
+        Enemy e = bossIndex switch
         {
-            List<Expense> expenses = new List<Expense>();
-            Console.WriteLine("Введите количество операций (от 2 до 40):");
-            int n;
-            while (!int.TryParse(Console.ReadLine(), out n) || n < 2 || n > 40)
-            {
-                Console.WriteLine("Неверное значение. Введите число от 2 до 40:");
-            }
-
-            Console.WriteLine("Введите траты по шаблону: (Название; Сумма)");
-            for (int i = 0; i < n; i++)
-            {
-                string line;
-                while (true)
-                {
-                    line = Console.ReadLine().Trim();
-
-                    {
-
-                        string[] parts = line.Split(';');
-                        if (parts.Length == 2)
-                        {
-                            string name = parts[0].Trim();
-                            if (double.TryParse(parts[1].Trim(), out double amount) && amount > 0)
-                            {
-                                expenses.Add(new Expense(name, amount));
-                                break;
-                            }
-                        }
-                    }
-                    Console.WriteLine("Неверный формат. Введите по шаблону: (Название; Сумма)");
-                }
-            }
-
-            while (true)
-            {
-                Console.WriteLine("\nМеню:");
-                Console.WriteLine("1. Вывод данных");
-                Console.WriteLine("2. Статистика (среднее, максимальное, минимальное, сумма)");
-                Console.WriteLine("3. Сортировка по цене (пузырьковая сортировка)");
-                Console.WriteLine("4. Конвертация валюты");
-                Console.WriteLine("5. Поиск по названию");
-                Console.WriteLine("0. Выход");
-                Console.Write("Выберите пункт: ");
-                string choice = Console.ReadLine();
-
-                switch (choice)
-                {
-                    case "1":
-                        Console.WriteLine("\nДанные:");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "2":
-                        if (expenses.Count > 0)
-                        {
-                            double sum = expenses.Sum(e => e.Amount);
-                            double avg = sum / expenses.Count;
-                            double max = expenses.Max(e => e.Amount);
-                            double min = expenses.Min(e => e.Amount);
-                            Console.WriteLine($"\nСтатистика:");
-                            Console.WriteLine($"Сумма: {sum} рубле");
-                            Console.WriteLine($"Среднее: {avg:F2} рубле");
-                            Console.WriteLine($"Максимум: {max} рубле");
-                            Console.WriteLine($"Минимум: {min} рубле");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Нет данных.");
-                        }
-                        break;
-                    case "3":
-                        BubbleSort(expenses);
-                        Console.WriteLine("\nДанные отсортированы по цене (по возрастанию):");
-                        foreach (var exp in expenses)
-                        {
-                            Console.WriteLine(exp);
-                        }
-                        break;
-                    case "4":
-                        Console.WriteLine("\nВыберите валюту для конвертации:");
-                        Console.WriteLine("1. доллар (курс: 90 рубле за 1 доллар)");
-                        Console.WriteLine("2. евро (курс: 100 рубле за 1 евро)");
-                        Console.WriteLine("3. Ввести свой курс");
-                        Console.Write("Выбор: ");
-                        string currChoice = Console.ReadLine();
-                        double rate = 1.0;
-                        string newCurrency = "";
-                        switch (currChoice)
-                        {
-                            case "1":
-                                rate = 90.0;
-                                newCurrency = "доллар";
-                                break;
-                            case "2":
-                                rate = 100.0;
-                                newCurrency = "евро";
-                                break;
-                            case "3":
-                                Console.Write("Введите курс: ");
-                                if (double.TryParse(Console.ReadLine(), out rate) && rate > 0)
-                                {
-                                    Console.Write("Введите название валюты: ");
-                                    newCurrency = Console.ReadLine().Trim();
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Неверный курс.");
-                                    continue;
-                                }
-                                break;
-                            default:
-                                Console.WriteLine("Неверный выбор.");
-                                continue;
-                        }
-                        Console.WriteLine($"\nКонвертированные данные в {newCurrency}:");
-                        foreach (var exp in expenses)
-                        {
-                            double converted = exp.Amount / rate;
-                            Console.WriteLine($"{exp.Name}; {converted:F2} {newCurrency}");
-                        }
-                        break;
-                    case "5":
-                        Console.Write("Введите название для поиска: ");
-                        string keyword = Console.ReadLine().Trim();
-                        var found = expenses.Where(e => e.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
-                        if (found.Count > 0)
-                        {
-                            Console.WriteLine("\nНайденные траты:");
-                            foreach (var exp in found)
-                            {
-                                Console.WriteLine(exp);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Ничего не найдено.");
-                        }
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.WriteLine("Неверный выбор.");
-                        break;
-                }
-            }
+            0 => MakeBaseGoblin(), // VVG (гоблин-босс)
+            1 => MakeBaseSkeleton(), // Ковальский (скелет-босс)
+            2 => MakeBaseMage(), // Архимаг C++ (маг-босс)
+            3 => MakeBaseSkeleton(), // Пестов S-- (скелет с особенностями)
+            _ => MakeBaseGoblin()
+        };
+        switch (bossIndex)
+        {
+            case 0: // ВВГ (гоблин)
+                e.Name = "ВВГ";
+                e.HP = (int)(e.HP * 2.0);
+                e.Attack = (int)Math.Ceiling(e.Attack * 1.5);
+                e.Defense = (int)Math.Ceiling(e.Defense * 1.2);
+                e.CritChance += 0.10; // +10% к шансу крита
+                break;
+            case 1: // Ковальский (скелет)
+                e.Name = "Ковальский";
+                e.HP = (int)(e.HP * 2.5);
+                e.Attack = (int)Math.Ceiling(e.Attack * 1.3);
+                e.Defense = (int)Math.Ceiling(e.Defense * 1.4);
+                e.IgnorePlayerDefense = true; // уже true, но повторим для ясности
+                break;
+            case 2: // Архимаг C++ (маг)
+                e.Name = "Архимаг C++";
+                e.HP = (int)(e.HP * 1.8);
+                e.Attack = (int)Math.Ceiling(e.Attack * 1.6);
+                e.Defense = (int)Math.Ceiling(e.Defense * 1.1);
+                e.FreezeChance += 0.10; // +10% к заморозке
+                break;
+            case 3: // Пестов S-- (скелет с шансом заморозки)
+                e.Name = "Пестов S--";
+                e.HP = (int)(e.HP * 1.3);
+                e.Attack = (int)Math.Ceiling(e.Attack * 1.8);
+                e.Defense = Math.Max(0, (int)Math.Floor(e.Defense * 0.6));
+                e.IgnorePlayerDefense = true;
+                e.FreezeChance = 0.18 + 0.15; // добавляет шанс заморозки +15% к обычному магу
+                break;
         }
+        return e;
+    }
 
-        static void BubbleSort(List<Expense> list)
+    // --- Генерация случайных обычных врагов ---
+    static Enemy GenerateRandomEnemy()
+    {
+        int t = rng.Next(3);
+        return t switch
         {
-            int n = list.Count;
-            for (int i = 0; i < n - 1; i++)
+            0 => MakeBaseGoblin(),
+            1 => MakeBaseSkeleton(),
+            2 => MakeBaseMage(),
+            _ => MakeBaseGoblin()
+        };
+    }
+
+    // --- Генерация случайного предмета из сундука ---
+    static object GenerateRandomItem()
+    {
+        int t = rng.Next(3);
+        if (t == 0) return "potion"; // полное исцеление
+        if (t == 1) // оружие
+            return new Weapon { Name = $"Меч_{rng.Next(1,1000)}", Attack = rng.Next(1, 6) };
+        else // доспех
+            return new Armor { Name = $"Доспех_{rng.Next(1,1000)}", Defense = rng.Next(1, 6) };
+    }
+
+    // --- Боевой цикл между игроком и врагом ---
+    // Возвращает true если игрок выжил, false если погиб.
+    static bool Combat(Player p, Enemy enemy)
+    {
+        Console.WriteLine($"Начинается бой: {enemy}");
+
+        while (p.HP > 0 && enemy.HP > 0)
+        {
+            // Если игрок заморожен — он пропускает свой ход (только в бою).
+            if (p.Frozen)
             {
-                for (int j = 0; j < n - i - 1; j++)
+                Console.WriteLine("Вы заморожены и пропускаете ход!");
+                p.Frozen = false; // заморозка срабатывает один раз
+            }
+            else
+            {
+                // Ход игрока: выбор Атаки или Защиты
+                Console.WriteLine($"Ваш HP: {p.HP}/{p.MaxHP}  Оружие: {p.Weapon}  Доспех: {p.Armor}");
+                Console.Write("Выберите действие (A - Атака, D - Защита): ");
+                string cmd = Console.ReadLine().Trim().ToLower();
+                p.Defending = false;
+                if (cmd == "d" || cmd == "защита" || cmd == "def")
                 {
-                    if (list[j].Amount > list[j + 1].Amount)
+                    p.Defending = true; // включаем режим защиты — влияет на следующую атаку врага
+                    Console.WriteLine("Вы встали в защиту: шанс уклониться 40% или блок уменьшает урон.");
+                }
+                else
+                {
+                    // Атакуем
+                    int playerBase = 8 // базовый урон игрока без оружия
+                    int damage = Math.Max(1, playerBase + (p.Weapon?.Attack ?? 0) - enemy.Defense);
+                    enemy.HP -= damage;
+                    Console.WriteLine($"Вы атакуете и наносите {damage} урона (HP врага: {Math.Max(0, enemy.HP)})");
+                }
+            }
+
+            // Если враг жив — он отвечает
+            if (enemy.HP > 0)
+            {
+                // Враг атакует
+                int incoming = enemy.Attack;
+
+                // Если враг игнорирует защиту игрока, то защита брони не учитывается
+                int playerArmorValue = enemy.IgnorePlayerDefense ? 0 : (p.Armor?.Defense ?? 0);
+
+                // Если игрок защищается — сначала шанс уклониться 40%
+                if (p.Defending)
+                {
+                    double roll = rng.NextDouble();
+                    if (roll < 0.40) // уклонение — урон 0
                     {
-                        Expense temp = list[j];
-                        list[j] = list[j + 1];
-                        list[j + 1] = temp;
+                        Console.WriteLine("Вы успешно уклонились от атаки!");
+                    }
+                    else
+                    {
+                        // Не уклонились — блок уменьшает получаемый урон на 70–100% от характеристики защиты
+                        double factor = 0.7 + rng.NextDouble() * 0.3; // 0.7..1.0
+                        double reduction = playerArmorValue * factor;
+                        int damage = Math.Max(0, (int)Math.Round(incoming - reduction));
+                        // Учитываем крит у гоблина и возможность заморозки ниже
+                        bool wasCrit = rng.NextDouble() < enemy.CritChance;
+                        if (wasCrit) { damage = damage * 2; Console.WriteLine("Критический удар от врага!"); }
+                        if (enemy.FreezeChance > 0 && rng.NextDouble() < enemy.FreezeChance) { p.Frozen = true; Console.WriteLine("Враг наложил заморозку — вы пропустите следующий боевой ход!"); }
+                        p.HP -= damage;
+                        Console.WriteLine($"Враг атакует и вы получаете {damage} урона (HP: {Math.Max(0, p.HP)})");
                     }
                 }
+                else
+                {
+                    // Игрок не защищается — обычный удар
+                    int effectiveArmor = playerArmorValue;
+                    int damage = Math.Max(0, incoming - effectiveArmor);
+                    bool wasCrit = rng.NextDouble() < enemy.CritChance;
+                    if (wasCrit) { damage = damage * 2; Console.WriteLine("Критический удар от врага!"); }
+                    if (enemy.FreezeChance > 0 && rng.NextDouble() < enemy.FreezeChance) { p.Frozen = true; Console.WriteLine("Враг наложил заморозку — вы пропустите следующий боевой ход!"); }
+                    p.HP -= damage;
+                    Console.WriteLine($"Враг атакует и вы получаете {damage} урона (HP: {Math.Max(0, p.HP)})");
+                }
             }
+
+            // Сбрасываем режим защиты после одного применения
+            p.Defending = false;
+            Console.WriteLine();
         }
+
+        if (p.HP <= 0) Console.WriteLine("Вы погибли. Игра окончена.");
+        else Console.WriteLine("Враг повержен!");
+
+        return p.HP > 0;
+    }
+
+    static void Main()
+    {
+        Player player = new Player();
+        Console.WriteLine("--- Текстовая консольная пошаговая мини-игра-роуглайк ---");
+        Console.WriteLine("Управление: вводите A для атаки, D для защиты. При подборе предметов — Y/N.");
+        Console.WriteLine("Нажмите Enter, чтобы начать...");
+        Console.ReadLine();
+
+        int turn = 0;
+        while (player.HP > 0)
+        {
+            turn++;
+            Console.WriteLine($"--- Ход {turn} ---");
+
+            // Каждые 10 ходов — босс
+            if (turn % 10 == 0)
+            {
+                Console.WriteLine("Вы наткнулись на босса!");
+                int bossIndex = rng.Next(4);
+                Enemy boss = MakeBoss(bossIndex);
+                bool alive = Combat(player, boss);
+                if (!alive) break;
+                continue;
+            }
+
+            // Иначе 50/50 сундук или враг
+            if (rng.Next(2) == 0) // сундук
+            {
+                Console.WriteLine("Вы нашли сундук!");
+                object item = GenerateRandomItem();
+                if (item is string s && s == "potion")
+                {
+                    player.HealFull();
+                    Console.WriteLine("В сундуке — лечебное зелье. Вы полностью исцелены!");
+                }
+                else if (item is Weapon w)
+                {
+                    Console.WriteLine($"В сундуке — новое оружие: {w}");
+                    Console.WriteLine($"Текущее оружие: {player.Weapon}");
+                    Console.Write("Взять новое оружие? (y/n): ");
+                    string ans = Console.ReadLine().Trim().ToLower();
+                    if (ans == "y" || ans == "д" ) { player.Weapon = w; Console.WriteLine("Оружие заменено."); }
+                    else Console.WriteLine("Оружие выброшено.");
+                }
+                else if (item is Armor a)
+                {
+                    Console.WriteLine($"В сундуке — новый доспех: {a}");
+                    Console.WriteLine($"Текущий доспех: {player.Armor}");
+                    Console.Write("Взять новый доспех? (y/n): ");
+                    string ans = Console.ReadLine().Trim().ToLower();
+                    if (ans == "y" || ans == "д") { player.Armor = a; Console.WriteLine("Доспех заменён."); }
+                    else Console.WriteLine("Доспех выброшен.");
+                }
+            }
+            else // враг
+            {
+                Enemy enemy = GenerateRandomEnemy();
+                bool alive = Combat(player, enemy);
+                if (!alive) break;
+            }
+
+            Console.WriteLine();
+        }
+
+        Console.WriteLine("Спасибо за игру!");
     }
 }

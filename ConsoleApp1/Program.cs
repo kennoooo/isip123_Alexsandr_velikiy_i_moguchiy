@@ -6,7 +6,7 @@ class Program
 {
     static Random rng = new Random();
 
-    // --- Простые структуры данных для предметов и существ ---
+    // Простые структуры данных для предметов и существ
     class Weapon { public string Name; public int Attack; public override string ToString() => $"{Name} (+{Attack} ATK)"; }
     class Armor { public string Name; public int Defense; public override string ToString() => $"{Name} (+{Defense} DEF)"; }
 
@@ -36,7 +36,7 @@ class Program
         public override string ToString() => $"{Name} ({Race}) HP:{HP} ATK:{Attack} DEF:{Defense}";
     }
 
-    // --- Базовые значения для обычных противников ---
+    // Базовые значения для обычных противников
     static Enemy MakeBaseGoblin()
     {
         return new Enemy { Name = "Гоблин", Race = EnemyRace.Goblin, HP = 30, Attack = 8, Defense = 3, CritChance = 0.12 };
@@ -50,7 +50,7 @@ class Program
         return new Enemy { Name = "Маг", Race = EnemyRace.Mage, HP = 24, Attack = 7, Defense = 2, FreezeChance = 0.18 };
     }
 
-    // --- Боссы (наследуют особенности расы и модифицируют характеристики) ---
+    // Боссы (наследуют особенности расы и модифицируют характеристики)
     static Enemy MakeBoss(int bossIndex)
     {
         // bossIndex 0..3 — четыре разных босса
@@ -75,7 +75,7 @@ class Program
                 e.HP = (int)(e.HP * 2.5);
                 e.Attack = (int)Math.Ceiling(e.Attack * 1.3);
                 e.Defense = (int)Math.Ceiling(e.Defense * 1.4);
-                e.IgnorePlayerDefense = true; // уже true, но повторим для ясности
+                e.IgnorePlayerDefense = true;
                 break;
             case 2: // Архимаг C++ (маг)
                 e.Name = "Архимаг C++";
@@ -115,12 +115,12 @@ class Program
         int t = rng.Next(3);
         if (t == 0) return "potion"; // полное исцеление
         if (t == 1) // оружие
-            return new Weapon { Name = $"Меч_{rng.Next(1,1000)}", Attack = rng.Next(2, 8) };
+            return new Weapon { Name = $"Меч_{rng.Next(1, 1000)}", Attack = rng.Next(2, 8) };
         else // доспех
-            return new Armor { Name = $"Доспех_{rng.Next(1,1000)}", Defense = rng.Next(1, 6) };
+            return new Armor { Name = $"Доспех_{rng.Next(1, 1000)}", Defense = rng.Next(1, 6) };
     }
 
-    // --- Боевой цикл между игроком и врагом ---
+    // Боевой цикл между игроком и врагом
     // Возвращает true если игрок выжил, false если погиб.
     static bool Combat(Player p, Enemy enemy)
     {
@@ -141,7 +141,7 @@ class Program
                 Console.Write("Выберите действие (A - Атака, D - Защита): ");
                 string cmd = Console.ReadLine().Trim().ToLower();
                 p.Defending = false;
-                if (cmd == "d" || cmd == "защита" || cmd == "def")
+                if (cmd == "d")
                 {
                     p.Defending = true; // включаем режим защиты — влияет на следующую атаку врага
                     Console.WriteLine("Вы встали в защиту: шанс уклониться 40% или блок уменьшает урон.");
@@ -200,9 +200,6 @@ class Program
                 }
             }
 
-            // Сбрасываем режим защиты после одного применения
-            p.Defending = false;
-            Console.WriteLine();
         }
 
         if (p.HP <= 0) Console.WriteLine("Вы погибли. Игра окончена.");
@@ -235,7 +232,7 @@ class Program
                 continue;
             }
 
-            // Иначе 50/50 сундук или враг
+            // 50/50 сундук или враг
             if (rng.Next(2) == 0) // сундук
             {
                 Console.WriteLine("Вы нашли сундук!");
@@ -251,7 +248,7 @@ class Program
                     Console.WriteLine($"Текущее оружие: {player.Weapon}");
                     Console.Write("Взять новое оружие? (y/n): ");
                     string ans = Console.ReadLine().Trim().ToLower();
-                    if (ans == "y" || ans == "д" ) { player.Weapon = w; Console.WriteLine("Оружие заменено."); }
+                    if (ans == "y" || ans == "д") { player.Weapon = w; Console.WriteLine("Оружие заменено."); }
                     else Console.WriteLine("Оружие выброшено.");
                 }
                 else if (item is Armor a)

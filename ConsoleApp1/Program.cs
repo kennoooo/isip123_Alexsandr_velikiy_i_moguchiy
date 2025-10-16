@@ -6,7 +6,7 @@ class Program
 {
     static Random rng = new Random();
 
-    // Простые структуры данных для предметов и существ
+    // данные для предметов и существ
     class Weapon { public string Name; public int Attack; public override string ToString() => $"{Name} (+{Attack} ATK)"; }
     class Armor { public string Name; public int Defense; public override string ToString() => $"{Name} (+{Defense} DEF)"; }
 
@@ -14,8 +14,8 @@ class Program
     {
         public int MaxHP = 100;
         public int HP = 100;
-        public Weapon Weapon = new Weapon { Name = "Кулаки", Attack = 0 };
-        public Armor Armor = new Armor { Name = "Обычная одежда", Defense = 0 };
+        public Weapon Weapon = new Weapon { Name = "Кулаки", Attack = 3 };
+        public Armor Armor = new Armor { Name = "Обычная одежда", Defense = 3 };
         public bool Frozen = false; // если true — игрок пропускает следующий боевой ход
         public bool Defending = false; // режим защиты на текущую атаку
         public void HealFull() => HP = MaxHP;
@@ -96,7 +96,7 @@ class Program
         return e;
     }
 
-    // --- Генерация случайных обычных врагов ---
+    // Генерация случайных обычных врагов
     static Enemy GenerateRandomEnemy()
     {
         int t = rng.Next(3);
@@ -105,11 +105,12 @@ class Program
             0 => MakeBaseGoblin(),
             1 => MakeBaseSkeleton(),
             2 => MakeBaseMage(),
-            _ => MakeBaseGoblin()
+            _ => MakeBaseGoblin(),
+
         };
     }
 
-    // --- Генерация случайного предмета из сундука ---
+    // Генерация случайного предмета из сундука
     static object GenerateRandomItem()
     {
         int t = rng.Next(3);
@@ -128,15 +129,15 @@ class Program
 
         while (p.HP > 0 && enemy.HP > 0)
         {
-            // Если игрок заморожен — он пропускает свой ход (только в бою).
+            // Если игрок заморожен — он пропускает свой ход.
             if (p.Frozen)
             {
                 Console.WriteLine("Вы заморожены и пропускаете ход!");
-                p.Frozen = false; // заморозка срабатывает один раз
+                p.Frozen = false;
             }
             else
             {
-                // Ход игрока: выбор Атаки или Защиты
+                // выбор Атаки или Защиты
                 Console.WriteLine($"Ваш HP: {p.HP}/{p.MaxHP}  Оружие: {p.Weapon}  Доспех: {p.Armor}");
                 Console.Write("Выберите действие (A - Атака, D - Защита): ");
                 string cmd = Console.ReadLine().Trim().ToLower();
@@ -148,7 +149,7 @@ class Program
                 }
                 else
                 {
-                    // Атакуем
+                    // Атакa
                     int playerBase = 8; // базовый урон игрока без оружия
                     int damage = Math.Max(1, playerBase + (p.Weapon?.Attack ?? 0) - enemy.Defense);
                     enemy.HP -= damage;
@@ -248,7 +249,7 @@ class Program
                     Console.WriteLine($"Текущее оружие: {player.Weapon}");
                     Console.Write("Взять новое оружие? (y/n): ");
                     string ans = Console.ReadLine().Trim().ToLower();
-                    if (ans == "y" || ans == "д") { player.Weapon = w; Console.WriteLine("Оружие заменено."); }
+                    if (ans == "y") { player.Weapon = w; Console.WriteLine("Оружие заменено."); }
                     else Console.WriteLine("Оружие выброшено.");
                 }
                 else if (item is Armor a)
@@ -257,7 +258,7 @@ class Program
                     Console.WriteLine($"Текущий доспех: {player.Armor}");
                     Console.Write("Взять новый доспех? (y/n): ");
                     string ans = Console.ReadLine().Trim().ToLower();
-                    if (ans == "y" || ans == "д") { player.Armor = a; Console.WriteLine("Доспех заменён."); }
+                    if (ans == "y") { player.Armor = a; Console.WriteLine("Доспех заменён."); }
                     else Console.WriteLine("Доспех выброшен.");
                 }
             }
@@ -273,3 +274,4 @@ class Program
 
     }
 }
+

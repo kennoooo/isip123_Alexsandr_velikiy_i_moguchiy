@@ -31,12 +31,10 @@ namespace AutoServiceSimple
             new("Аккумулятор", 80, 1)
         };
 
-        // part, qty, remainingClients
         List<(Part part, int qty, int remain)> pending = new();
 
         public void Run()
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.WriteLine("Добро пожаловать в автосервис!");
 
             while (true)

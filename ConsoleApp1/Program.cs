@@ -32,7 +32,7 @@ namespace AutoServiceSimple
 
     class Game
     {
-        // Замените на вашу строку подключения
+
         readonly string connectionString = "Server=YOUR_SERVER;Database=AutoServiceDb;Trusted_Connection=True;";
 
         decimal balance = 200;

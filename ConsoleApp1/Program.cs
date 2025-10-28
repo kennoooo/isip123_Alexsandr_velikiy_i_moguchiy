@@ -88,41 +88,7 @@ namespace AutoServiceSimple
             using var conn = new SqlConnection(connectionString);
             conn.Open();
 
-            // Создаём таблицы, если их нет
-            string createParts = @"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Parts' AND xtype='U')
-BEGIN
-    CREATE TABLE Parts (
-        Id INT IDENTITY(1,1) PRIMARY KEY,
-        Name NVARCHAR(200) NOT NULL,
-        Price DECIMAL(18,2) NOT NULL,
-        Quantity INT NOT NULL
-    );
-END
-";
-            string createPending = @"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='PendingOrders' AND xtype='U')
-BEGIN
-    CREATE TABLE PendingOrders (
-        Id INT IDENTITY(1,1) PRIMARY KEY,
-        PartId INT NOT NULL FOREIGN KEY REFERENCES Parts(Id),
-        Qty INT NOT NULL,
-        Remain INT NOT NULL
-    );
-END
-";
-            string createState = @"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='GameState' AND xtype='U')
-BEGIN
-    CREATE TABLE GameState (
-        Id INT PRIMARY KEY, -- всегда 1
-        Balance DECIMAL(18,2) NOT NULL,
-        CarsSinceOrder INT NOT NULL
-    );
-
-    INSERT INTO GameState (Id, Balance, CarsSinceOrder) VALUES (1, 200.00, 0);
-END
-";
+          
 
             using (var cmd = conn.CreateCommand())
             {

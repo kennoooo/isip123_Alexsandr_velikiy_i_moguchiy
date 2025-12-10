@@ -33,7 +33,6 @@ namespace ConsoleApp3
             Console.WriteLine("=== АВТОСЕРВИС — НАЧАЛО ИГРЫ ===");
             Console.WriteLine();
 
-            //что бд корректно загружена
             if (!Core.Context.Parts.Any())
             {
                 Console.WriteLine("Ошибка: таблица Parts пустая.");
@@ -74,12 +73,10 @@ namespace ConsoleApp3
             }
         }
 
-        // --- Клиенты ---
         private void HandleClient()
         {
             Random rnd = new Random();
 
-            // Загружаем все детали в память
             var parts = Core.Context.Parts.ToList();
             if (parts.Count == 0)
             {
@@ -87,10 +84,9 @@ namespace ConsoleApp3
                 return;
             }
 
-            // Выбираем случайную деталь
             var brokenPart = parts[rnd.Next(parts.Count)];
 
-            decimal laborCost = 200; // пример оплаты работы
+            decimal laborCost = 200; 
             decimal totalPrice = brokenPart.Price + laborCost;
 
             Console.WriteLine($"\nКлиент: сломалась деталь — {brokenPart.Name}");
@@ -105,7 +101,7 @@ namespace ConsoleApp3
                 return;
             }
 
-            // Ищем деталь на складе
+
             var whPart = Core.Context.WarehouseParts
                 .FirstOrDefault(x => x.PartsID == brokenPart.ID && x.Count > 0);
 
@@ -150,18 +146,17 @@ namespace ConsoleApp3
             Console.WriteLine("-100 руб. штраф");
         }
 
-        // --- Закупка ---
         private void PurchaseMenu()
         {
             Console.WriteLine();
-            Console.WriteLine("=== МЕНЮ ЗАКУПКИ ===");
+            Console.WriteLine("МЕНЮ");
 
             var parts = Core.Context.Parts.ToList();
 
             for (int i = 0; i < parts.Count; i++)
                 Console.WriteLine($"{i + 1}. {parts[i].Name} — {parts[i].Price} руб.");
 
-            Console.Write("Выберите деталь (0 — назад): ");
+            Console.Write("Выберите деталь (0 = выход): ");
             if (!int.TryParse(Console.ReadLine(), out int choice) ||
                 choice < 1 || choice > parts.Count)
                 return;
@@ -171,7 +166,7 @@ namespace ConsoleApp3
             Console.Write("Количество: ");
             if (!int.TryParse(Console.ReadLine(), out int count) || count <= 0)
             {
-                Console.WriteLine("Неверное количество.");
+                Console.WriteLine("Неверно.");
                 return;
             }
 
@@ -201,14 +196,13 @@ namespace ConsoleApp3
                 ClientsToServe = 2
             });
 
-            Console.WriteLine($"Деталь будет добавлена на склад после обслуживания 2 клиентов.");
+            Console.WriteLine($"Деталь будет добавлена на складе через 2 дня.");
         }
 
-        // --- Просмотр склада ---
         private void PrintWarehouse()
         {
             Console.WriteLine();
-            Console.WriteLine("=== СКЛАД ===");
+            Console.WriteLine("СКЛАД");
 
             var items = Core.Context.WarehouseParts.ToList();
 
@@ -221,19 +215,17 @@ namespace ConsoleApp3
 
         private void ApplyFine(decimal fineAmount)
         {
-            // Получаем запись склада (в игре один склад)
+
             var warehouse = Core.Context.WareHouse.First();
 
-            // Списываем штраф
             warehouse.Balance -= fineAmount;
             Core.Context.SaveChanges();
 
             Console.WriteLine($"Списано штрафа: {fineAmount} руб.");
 
-            // Проверка на отрицательный баланс
             if (warehouse.Balance < 0)
             {
-                Console.WriteLine("Баланс отрицательный. Вы разорились. Игра окончена.");
+                Console.WriteLine("Игра окончена.");
                 Environment.Exit(0);
             }
         }

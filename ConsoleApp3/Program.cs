@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,12 +30,12 @@ namespace ConsoleApp3
         public void Start()
         {
             Console.Clear();
-            Console.WriteLine("=== АВТОСЕРВИС — НАЧАЛО ИГРЫ ===");
+            Console.WriteLine("НАЧАЛО ИГРЫ");
             Console.WriteLine();
 
             if (!Core.Context.Parts.Any())
             {
-                Console.WriteLine("Ошибка: таблица Parts пустая.");
+                Console.WriteLine("Ошибка: таблица пустая.");
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace ConsoleApp3
             }
             else
             {
-                Console.WriteLine("Детали на складе нет. Клиент недоволен, списан штраф.");
+                Console.WriteLine("Детали на складе нет. Cписан штраф.");
                 ApplyFine(totalPrice * 1.5m);
             }
             UpdatePendingPurchases();
@@ -140,10 +140,10 @@ namespace ConsoleApp3
         private void PayFine()
         {
             var warehouse = Core.Context.WareHouse.First();
-            warehouse.Balance -= 100;
+            warehouse.Balance -= 1000;
             Core.Context.SaveChanges();
 
-            Console.WriteLine("-100 руб. штраф");
+            Console.WriteLine("Штраф 1000 руб.");
         }
 
         private void PurchaseMenu()
@@ -156,7 +156,7 @@ namespace ConsoleApp3
             for (int i = 0; i < parts.Count; i++)
                 Console.WriteLine($"{i + 1}. {parts[i].Name} — {parts[i].Price} руб.");
 
-            Console.Write("Выберите деталь (0 = выход): ");
+            Console.Write("Выберите деталь (0 - выход): ");
             if (!int.TryParse(Console.ReadLine(), out int choice) ||
                 choice < 1 || choice > parts.Count)
                 return;

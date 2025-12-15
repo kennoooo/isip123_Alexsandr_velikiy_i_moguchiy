@@ -69,7 +69,7 @@ namespace Model
 
             if (player.Defending)
             {
-                // Используем RandomChoice вместо Random
+
                 if (RandomChoice.Chance(0.40))
                 {
                     Console.WriteLine("Вы успешно уклонились от атаки!");

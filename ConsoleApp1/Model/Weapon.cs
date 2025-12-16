@@ -5,8 +5,8 @@ namespace Model
 {
     public class Weapon
     {
-        public string Name { get; set; }
-        public int Attack { get; set; }
+        public string Name;
+        public int Attack;
 
         public override string ToString()
         {

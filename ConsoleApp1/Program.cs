@@ -29,7 +29,7 @@ namespace Model
                     Console.WriteLine("Вы наткнулись на босса!");
                     int bossIndex = RandomChoice.Next(4); 
                     Enemy boss = EnemyFactory.CreateBoss(bossIndex);
-                    bool alive = CombatSystem.Combat(player, boss);
+                    bool alive = Player.Combat(player, boss);
                     if (!alive) break;
                     continue;
                 }
@@ -44,7 +44,7 @@ namespace Model
                 else
                 {
                     Enemy enemy = EnemyFactory.GenerateRandomEnemy();
-                    bool alive = CombatSystem.Combat(player, enemy);
+                    bool alive = Player.Combat(player, enemy);
                     if (!alive) break;
                 }
 
